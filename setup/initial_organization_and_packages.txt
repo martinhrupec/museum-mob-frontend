@@ -1,0 +1,49 @@
+# U museum-mob-frontend folderu
+npx create-expo-app@latest . --template blank-typescript
+
+# Navigacija
+npm install @react-navigation/native @react-navigation/stack @react-navigation/bottom-tabs
+npx expo install react-native-screens react-native-safe-area-context
+
+# HTTP klijent
+npm install axios
+
+# State management (odaberi jedan)
+npm install zustand  # Lakši, preporučam za početak
+# ili
+npm install @reduxjs/toolkit react-redux
+
+# Form handling (opcionalno ali korisno)
+npm install react-hook-form
+
+# Environment varijable
+npm install react-native-dotenv
+npm install --save-dev @types/react-native-dotenv
+
+# Async storage (za token spremanje)
+npx expo install @react-native-async-storage/async-storage
+```
+
+---
+
+## **3. Struktura foldera**
+
+Napravi ovakvu strukturu:
+```
+museum-mob-frontend/
+├── src/
+│   ├── api/              # API konfiguracija
+│   │   ├── client.ts     # axios instance
+│   │   └── endpoints.ts  # API endpoints
+│   ├── components/       # Reusable komponente
+│   ├── screens/          # Screen komponente
+│   ├── navigation/       # Navigation setup
+│   ├── store/            # State management (Zustand/Redux)
+│   ├── types/            # TypeScript tipovi
+│   ├── utils/            # Helper funkcije
+│   └── constants/        # Konstante, boje, itd.
+├── assets/               # Slike, fontovi
+├── .env                  # Environment varijable
+├── App.tsx
+├── app.json
+└── package.json
