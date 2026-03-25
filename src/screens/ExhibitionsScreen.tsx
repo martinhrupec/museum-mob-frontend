@@ -9,11 +9,11 @@ import {
   Modal,
   ScrollView,
   TextInput,
-  Alert,
   RefreshControl,
   Platform,
   Keyboard,
 } from 'react-native';
+import { crossAlert } from '../utils/alert';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   Exhibition,
@@ -53,8 +53,8 @@ const ExhibitionsScreen: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'upcoming' | 'finished'>('all');
   const [searchText, setSearchText] = useState('');
   const [appliedSearchText, setAppliedSearchText] = useState('');
-  const [sortField, setSortField] = useState<SortField | ''>(''); // Prazan default - korisnik mora odabrati
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [sortField, setSortField] = useState<SortField | ''>('start_date');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -62,8 +62,8 @@ const ExhibitionsScreen: React.FC = () => {
   
   // Temp state za filter modal (primjenjuje se tek na "Primijeni")
   const [tempStatusFilter, setTempStatusFilter] = useState<'all' | 'active' | 'upcoming' | 'finished'>('all');
-  const [tempSortField, setTempSortField] = useState<SortField | ''>('');
-  const [tempSortOrder, setTempSortOrder] = useState<SortOrder>('asc');
+  const [tempSortField, setTempSortField] = useState<SortField | ''>('start_date');
+  const [tempSortOrder, setTempSortOrder] = useState<SortOrder>('desc');
   
   // Modal states
   const [showActionModal, setShowActionModal] = useState(false);
@@ -174,7 +174,7 @@ const ExhibitionsScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ Error loading exhibitions:', error);
-      Alert.alert('Greška', 'Neuspješno učitavanje izložbi');
+      crossAlert('Greška', 'Neuspješno učitavanje izložbi');
     } finally {
       setLoading(false);
     }
@@ -195,7 +195,7 @@ const ExhibitionsScreen: React.FC = () => {
         setDetailsModalVisible(true);
       } catch (error) {
         console.error('Error loading exhibition details:', error);
-        Alert.alert('Greška', 'Neuspješno učitavanje detalja izložbe');
+        crossAlert('Greška', 'Neuspješno učitavanje detalja izložbe');
       }
     } else {
       // Admin dobiva opcije - može koristiti postojeće podatke
@@ -260,18 +260,18 @@ const ExhibitionsScreen: React.FC = () => {
 
   const handleCreate = async () => {
     if (!formData.name.trim()) {
-      Alert.alert('Greška', 'Ime izložbe je obavezno');
+      crossAlert('Greška', 'Ime izložbe je obavezno');
       return;
     }
 
     if (formData.open_on.length === 0) {
-      Alert.alert('Greška', 'Molimo odaberite barem jedan dan u tjednu');
+      crossAlert('Greška', 'Molimo odaberite barem jedan dan u tjednu');
       return;
     }
 
     if (formData.is_special_event) {
       if (!formData.event_start_time || !formData.event_end_time) {
-        Alert.alert('Greška', 'Vrijeme početka i kraja događaja su obavezni za poseban događaj');
+        crossAlert('Greška', 'Vrijeme početka i kraja događaja su obavezni za poseban događaj');
         return;
       }
     }
@@ -279,11 +279,11 @@ const ExhibitionsScreen: React.FC = () => {
     try {
       await createExhibition(formData);
       setCreateModalVisible(false);
-      Alert.alert('Uspjeh', 'Izložba je uspješno kreirana');
+      crossAlert('Uspjeh', 'Izložba je uspješno kreirana');
       loadExhibitions();
     } catch (error: any) {
       console.error('Error creating exhibition:', error);
-      Alert.alert('Greška', error.response?.data?.detail || 'Neuspješno kreiranje izložbe');
+      crossAlert('Greška', error.response?.data?.detail || 'Neuspješno kreiranje izložbe');
     }
   };
 
@@ -315,7 +315,7 @@ const ExhibitionsScreen: React.FC = () => {
     
     if (hasExhibitionStarted && isStartDateChanged) {
       console.log('❌ Cannot change start date - exhibition already started');
-      Alert.alert('Greška', 'Ne možete mijenjati datum početka jer je izložba već počela');
+      crossAlert('Greška', 'Ne možete mijenjati datum početka jer je izložba već počela');
       return;
     }
     
@@ -323,26 +323,26 @@ const ExhibitionsScreen: React.FC = () => {
     const hasExhibitionEnded = now > originalEndDate;
     if (hasExhibitionEnded) {
       console.log('❌ Exhibition has ended - cannot be edited');
-      Alert.alert('Greška', 'Izložba je završila i ne može se uređivati');
+      crossAlert('Greška', 'Izložba je završila i ne može se uređivati');
       return;
     }
     
     // Validacija: Datum kraja ne smije biti u prošlosti
     if (newEndDate < now) {
       console.log('❌ End date is in the past');
-      Alert.alert('Greška', 'Datum kraja ne može biti u prošlosti');
+      crossAlert('Greška', 'Datum kraja ne može biti u prošlosti');
       return;
     }
 
     if (!formData.name?.trim()) {
-      Alert.alert('Greška', 'Ime izložbe je obavezno');
+      crossAlert('Greška', 'Ime izložbe je obavezno');
       return;
     }
 
     if (formData.is_special_event) {
       if (!formData.event_start_time || !formData.event_end_time) {
         console.log('❌ Special event missing times');
-        Alert.alert('Greška', 'Vrijeme početka i kraja događaja su obavezni za poseban događaj');
+        crossAlert('Greška', 'Vrijeme početka i kraja događaja su obavezni za poseban događaj');
         return;
       }
     }
@@ -352,17 +352,17 @@ const ExhibitionsScreen: React.FC = () => {
       await updateExhibition(selectedExhibition.id, formData);
       console.log('✅ Update successful');
       setEditModalVisible(false);
-      Alert.alert('Uspjeh', 'Izložba je uspješno ažurirana');
+      crossAlert('Uspjeh', 'Izložba je uspješno ažurirana');
       loadExhibitions();
     } catch (error: any) {
       console.error('❌ Error updating exhibition:', error);
       console.error('❌ Error response:', error.response?.data);
-      Alert.alert('Greška', error.response?.data?.detail || 'Neuspješno ažuriranje izložbe');
+      crossAlert('Greška', error.response?.data?.detail || 'Neuspješno ažuriranje izložbe');
     }
   };
 
   const handleDelete = (id: number) => {
-    Alert.alert(
+    crossAlert(
       'Potvrda',
       'Jeste li sigurni da želite obrisati ovu izložbu?',
       [
@@ -376,11 +376,11 @@ const ExhibitionsScreen: React.FC = () => {
           onPress: async () => {
             try {
               await deleteExhibition(id);
-              Alert.alert('Uspjeh', 'Izložba je uspješno obrisana');
+              crossAlert('Uspjeh', 'Izložba je uspješno obrisana');
               loadExhibitions();
             } catch (error: any) {
               console.error('Error deleting exhibition:', error);
-              Alert.alert('Greška', error.response?.data?.detail || 'Neuspješno brisanje izložbe');
+              crossAlert('Greška', error.response?.data?.detail || 'Neuspješno brisanje izložbe');
             }
           },
         },
@@ -484,13 +484,13 @@ const ExhibitionsScreen: React.FC = () => {
 
         <View style={styles.cardBody}>
           <Text style={styles.cardInfo}>
-            📅 {formatDate(item.start_date)} - {formatDate(item.end_date)}
+            {formatDate(item.start_date)} - {formatDate(item.end_date)}
           </Text>
           <Text style={styles.cardInfo}>
             Broj pozicija po smjeni: {item.number_of_positions}
           </Text>
           <Text style={styles.cardInfo}>
-            Dani: {item.open_on.map(d => DAYS_OF_WEEK[d]).join(', ')}
+            Dani održavanja: {item.open_on.map(d => DAYS_OF_WEEK[d]).join(', ')}
           </Text>
           {item.is_special_event && (
             <Text style={styles.cardInfo}>
@@ -499,7 +499,7 @@ const ExhibitionsScreen: React.FC = () => {
           )}
           {!isAdmin && (
             <Text style={styles.hintText}>
-              👉 Pravila i važne obavijesti
+              Pravila i važne obavijesti
             </Text>
           )}
         </View>
@@ -563,6 +563,8 @@ const ExhibitionsScreen: React.FC = () => {
                 value={formData.name}
                 onChangeText={(text) => setFormData({ ...formData, name: text })}
                 placeholder="Unesite naziv izložbe"
+                autoComplete="off"
+                autoCorrect={false}
               />
             </View>
 
@@ -630,9 +632,9 @@ const ExhibitionsScreen: React.FC = () => {
                     padding: 14,
                     fontSize: 16,
                     borderRadius: 8,
-                    border: '1px solid #839958',
+                    border: '1px solid #A6C27A',
                     backgroundColor: hasStarted ? '#D3968C' : '#F7F4D5',
-                    color: '#839958',
+                    color: '#0A3323',
                     cursor: hasStarted ? 'not-allowed' : 'pointer',
                     opacity: hasStarted ? 0.6 : 1,
                   }}
@@ -682,9 +684,9 @@ const ExhibitionsScreen: React.FC = () => {
                     padding: 14,
                     fontSize: 16,
                     borderRadius: 8,
-                    border: '1px solid #839958',
+                    border: '1px solid #A6C27A',
                     backgroundColor: '#F7F4D5',
-                    color: '#839958',
+                    color: '#0A3323',
                   }}
                 />
               ) : (
@@ -753,9 +755,9 @@ const ExhibitionsScreen: React.FC = () => {
                         padding: 14,
                         fontSize: 16,
                         borderRadius: 8,
-                        border: '1px solid #839958',
+                        border: '1px solid #A6C27A',
                         backgroundColor: '#F7F4D5',
-                        color: '#839958',
+                        color: '#0A3323',
                       }}
                     />
                   ) : (
@@ -798,9 +800,9 @@ const ExhibitionsScreen: React.FC = () => {
                         padding: 14,
                         fontSize: 16,
                         borderRadius: 8,
-                        border: '1px solid #839958',
+                        border: '1px solid #A6C27A',
                         backgroundColor: '#F7F4D5',
-                        color: '#839958',
+                        color: '#0A3323',
                       }}
                     />
                   ) : (
@@ -1161,12 +1163,11 @@ const ExhibitionsScreen: React.FC = () => {
       <Modal visible={showFiltersModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.filtersModalContent}>
-            <Text style={styles.modalTitle}>Filteri i sortiranje</Text>
             
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* FILTERI */}
               <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>🔍 FILTERI</Text>
+                <Text style={styles.modalTitle}>Filter</Text>
                 
                 <Text style={styles.label}>Status</Text>
                 <View style={styles.pickerContainer}>
@@ -1187,7 +1188,7 @@ const ExhibitionsScreen: React.FC = () => {
 
               {/* SORTIRANJE */}
               <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>📊 SORTIRANJE</Text>
+                <Text style={styles.modalTitle}>Sortiranje</Text>
                 
                 <Text style={styles.label}>Sortiraj po</Text>
                 <View style={styles.pickerContainer}>
@@ -1231,7 +1232,7 @@ const ExhibitionsScreen: React.FC = () => {
                 style={styles.filterApplyButton}
                 onPress={applyFilters}
               >
-                <Text style={styles.filterApplyButtonText}>✓ Primijeni</Text>
+                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1268,10 +1269,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: '#F7F4D5',
+    backgroundColor: '#A6C27A',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -1282,13 +1283,13 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 10,
     paddingRight: 35,
     fontSize: 15,
     backgroundColor: '#F7F4D5',
-    color: '#839958',
+    color: '#0A3323',
   },
   searchButton: {
     backgroundColor: '#0A3323',
@@ -1331,16 +1332,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   filterChipText: {
     fontSize: 13,
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '500',
   },
   filterChipClose: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: 'bold',
   },
   createButton: {
@@ -1351,7 +1352,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   createButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '700',
     fontSize: 16,
   },
@@ -1362,7 +1363,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   card: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1379,7 +1380,7 @@ const styles = StyleSheet.create({
     // Bez bordere - status se vidi iz badge-a
   },
   statusUpcoming: {
-    backgroundColor: '#105666',
+    backgroundColor: '#F7F4D5',
   },
   statusFinished: {
     backgroundColor: '#D3968C',
@@ -1393,7 +1394,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     flex: 1,
   },
   statusBadge: {
@@ -1402,7 +1403,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusActive: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
+    borderWidth: 1,
+    borderColor: '#0A3323',
   },
   statusInactive: {
     backgroundColor: '#D3968C',
@@ -1417,13 +1420,15 @@ const styles = StyleSheet.create({
   },
   cardInfo: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
+    fontWeight: '500',
   },
   hintText: {
-    fontSize: 13,
-    color: '#105666',
+    fontSize: 14,
+    color: '#0A3323',
     marginTop: 8,
     fontStyle: 'italic',
+    fontWeight: '500',
   },
   checkboxDisabled: {
     opacity: 0.5,
@@ -1441,7 +1446,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#0A3323',
   },
   statsText: {
     fontSize: 13,
@@ -1468,16 +1473,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   modalTitle: {
     fontSize: 20,
+    marginBottom: 10,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
   },
   closeButton: {
     fontSize: 24,
-    color: '#839958',
+    color: '#0A3323',
   },
   modalContent: {
     flex: 1,
@@ -1493,19 +1499,19 @@ const styles = StyleSheet.create({
   },
   detailLabelLarge: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: 'bold',
     marginBottom: 8,
     marginTop: 8,
   },
   detailValue: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '500',
   },
   rulesText: {
     fontSize: 15,
-    color: '#839958',
+    color: '#0A3323',
     lineHeight: 24,
   },
   rulesTextEmpty: {
@@ -1521,12 +1527,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F4D5',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   statsSectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 12,
   },
   statsDetail: {
@@ -1540,17 +1546,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     backgroundColor: '#F7F4D5',
-    color: '#839958',
+    color: '#0A3323',
   },
   textArea: {
     height: 100,
@@ -1558,14 +1564,14 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 14,
     backgroundColor: '#F7F4D5',
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   helperText: {
     fontSize: 14,
@@ -1582,7 +1588,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     backgroundColor: '#F7F4D5',
   },
   dayButtonSelected: {
@@ -1594,7 +1600,7 @@ const styles = StyleSheet.create({
     color: '#D3968C',
   },
   dayButtonTextSelected: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
   },
   submitButton: {
@@ -1606,7 +1612,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   submitButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1619,7 +1625,7 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     backgroundColor: '#F7F4D5',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1630,13 +1636,13 @@ const styles = StyleSheet.create({
     borderColor: '#0A3323',
   },
   checkboxMark: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 16,
     fontWeight: 'bold',
   },
   checkboxLabel: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   // Action Modal stilovi
   modalOverlay: {
@@ -1652,7 +1658,7 @@ const styles = StyleSheet.create({
     width: '85%',
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   actionButton: {
     flexDirection: 'row',
@@ -1669,7 +1675,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '500',
   },
   actionButtonDelete: {
@@ -1699,18 +1705,18 @@ const styles = StyleSheet.create({
     maxWidth: 500,
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   filterSection: {
     marginBottom: 25,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 15,
   },
   pickerContainer: {
@@ -1722,13 +1728,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F7F4D5',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 14,
   },
   pickerText: {
     fontSize: 15,
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '500',
   },
   pickerArrow: {
@@ -1740,7 +1746,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     paddingTop: 20,
     borderTopWidth: 2,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
     gap: 10,
   },
   filterCancelButton: {
@@ -1763,7 +1769,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterApplyButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '700',
     fontSize: 17,
   },
@@ -1781,12 +1787,12 @@ const styles = StyleSheet.create({
     maxWidth: 350,
     maxHeight: '60%',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   dropdownTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 15,
     textAlign: 'center',
   },
@@ -1799,22 +1805,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   dropdownItemActive: {
     backgroundColor: '#0A3323',
   },
   dropdownItemText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   dropdownItemTextActive: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
   },
   checkmark: {
     fontSize: 18,
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: 'bold',
   },
   paginationContainer: {
@@ -1824,7 +1830,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: '#F7F4D5',
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
   },
   paginationButton: {
     backgroundColor: '#0A3323',
@@ -1838,7 +1844,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   paginationButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -1848,7 +1854,7 @@ const styles = StyleSheet.create({
   paginationText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
 });
 

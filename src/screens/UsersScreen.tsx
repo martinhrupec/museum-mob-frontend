@@ -8,10 +8,10 @@ import {
   Modal, 
   TextInput, 
   ScrollView,
-  Alert,
   ActivityIndicator,
   Keyboard
 } from 'react-native';
+import { crossAlert } from '../utils/alert';
 import { useAuthStore } from '../store/authStore';
 import { 
   getUsers, 
@@ -170,7 +170,7 @@ export default function UsersScreen() {
       }
     } catch (error: any) {
       console.error('Error loading users:', error);
-      Alert.alert('Greška', 'Nije moguće učitati korisnike');
+      crossAlert('Greška', 'Nije moguće učitati korisnike');
     } finally {
       setLoading(false);
     }
@@ -185,7 +185,7 @@ export default function UsersScreen() {
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
     
-    Alert.alert(
+    crossAlert(
       'Brisanje korisnika',
       `Jeste li sigurni da želite obrisati korisnika ${selectedUser.username}?`,
       [
@@ -196,11 +196,11 @@ export default function UsersScreen() {
           onPress: async () => {
             try {
               await deleteUser(selectedUser.id);
-              Alert.alert('Uspjeh', 'Korisnik je obrisan');
+              crossAlert('Uspjeh', 'Korisnik je obrisan');
               setShowActionModal(false);
               loadUsers();
             } catch (error: any) {
-              Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće obrisati korisnika');
+              crossAlert('Greška', error.response?.data?.detail || 'Nije moguće obrisati korisnika');
             }
           },
         },
@@ -230,13 +230,13 @@ export default function UsersScreen() {
         setShowEditModal(true);
       }
     } catch (error) {
-      Alert.alert('Greška', 'Nije moguće učitati podatke korisnika');
+      crossAlert('Greška', 'Nije moguće učitati podatke korisnika');
     }
   };
 
   const handleCreateUser = async () => {
     if (!formData.username || !formData.password) {
-      Alert.alert('Greška', 'Korisničko ime i lozinka su obavezni');
+      crossAlert('Greška', 'Korisničko ime i lozinka su obavezni');
       return;
     }
 
@@ -244,7 +244,7 @@ export default function UsersScreen() {
     if (formData.email && formData.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        Alert.alert('Greška', 'Unesite ispravan email format (npr. ime@domena.com)');
+        crossAlert('Greška', 'Unesite ispravan email format (npr. ime@domena.com)');
         return;
       }
     }
@@ -254,7 +254,7 @@ export default function UsersScreen() {
     try {
       setCreatingUser(true);
       await createUser(formData);
-      Alert.alert('Uspjeh', 'Korisnik je kreiran');
+      crossAlert('Uspjeh', 'Korisnik je kreiran');
       setShowCreateModal(false);
       resetForm();
       loadUsers();
@@ -281,7 +281,7 @@ export default function UsersScreen() {
         }
       }
       
-      Alert.alert('Greška', errorMessage);
+      crossAlert('Greška', errorMessage);
     } finally {
       setCreatingUser(false);
     }
@@ -294,7 +294,7 @@ export default function UsersScreen() {
     if (formData.email && formData.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        Alert.alert('Greška', 'Unesite ispravan email format (npr. ime@domena.com)');
+        crossAlert('Greška', 'Unesite ispravan email format (npr. ime@domena.com)');
         return;
       }
     }
@@ -321,7 +321,7 @@ export default function UsersScreen() {
         });
       }
       
-      Alert.alert('Uspjeh', 'Profil je ažuriran');
+      crossAlert('Uspjeh', 'Profil je ažuriran');
       setShowEditModal(false);
       resetForm();
       loadUsers();
@@ -348,7 +348,7 @@ export default function UsersScreen() {
         }
       }
       
-      Alert.alert('Greška', errorMessage);
+      crossAlert('Greška', errorMessage);
     } finally {
       setUpdatingProfile(false);
     }
@@ -356,12 +356,12 @@ export default function UsersScreen() {
 
   const handleChangePassword = async () => {
     if (!passwordData.old_password || !passwordData.new_password || !passwordData.new_password_confirm) {
-      Alert.alert('Greška', 'Sva polja su obavezna');
+      crossAlert('Greška', 'Sva polja su obavezna');
       return;
     }
 
     if (passwordData.new_password !== passwordData.new_password_confirm) {
-      Alert.alert('Greška', 'Nove lozinke se ne podudaraju');
+      crossAlert('Greška', 'Nove lozinke se ne podudaraju');
       return;
     }
 
@@ -370,11 +370,11 @@ export default function UsersScreen() {
     try {
       setChangingPassword(true);
       await changePassword(passwordData);
-      Alert.alert('Uspjeh', 'Lozinka je promijenjena');
+      crossAlert('Uspjeh', 'Lozinka je promijenjena');
       setShowPasswordModal(false);
       setPasswordData({ old_password: '', new_password: '', new_password_confirm: '' });
     } catch (error: any) {
-      Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće promijeniti lozinku');
+      crossAlert('Greška', error.response?.data?.detail || 'Nije moguće promijeniti lozinku');
     } finally {
       setChangingPassword(false);
     }
@@ -403,26 +403,19 @@ export default function UsersScreen() {
       <View style={styles.userInfo}>
         <View style={styles.userHeader}>
           <Text style={styles.userName}>
-            {item.first_name && item.last_name 
+            {item.role === 'admin' ? '⚖️' : '🛡️'} 
+             {item.first_name && item.last_name 
               ? `${item.first_name} ${item.last_name}` 
               : item.username}
           </Text>
           {!item.is_active && <Text style={styles.inactiveBadge}>Neaktivan</Text>}
         </View>
         
-        <Text style={styles.userUsername}>@{item.username}</Text>
-        <Text style={styles.userRole}>
-          {item.role === 'admin' ? '👑 Administrator' : '🛡️ Čuvar'}
+        <Text style={styles.userUsername}>
+          @{item.username}
         </Text>
         
-        {item.email && <Text style={styles.userDetail}>✉️ {item.email}</Text>}
-        
-        <View style={styles.userMetadata}>
-          <Text style={styles.userDetail}>ID: {item.id}</Text>
-          {item.role === 'guard' && item.guard_profile && (
-            <Text style={styles.userDetail}> | Guard ID: {item.guard_profile.id}</Text>
-          )}
-        </View>
+        {item.email && <Text style={styles.userDetail}>{item.email}</Text>}
         
         {item.role === 'guard' && item.guard_profile && isAdmin && (
           <Text style={styles.userDetail}>Prioritet: {item.guard_profile.priority_number}</Text>
@@ -442,20 +435,22 @@ export default function UsersScreen() {
         )}
         
         <Text style={styles.userTimestamp}>
-          Pridružen: {new Date(item.date_joined).toLocaleDateString('hr-HR')}
+          Pridružen/a: {new Date(item.date_joined).toLocaleDateString('hr-HR')}
         </Text>
         
-        <Text style={styles.userTimestamp}>
-          Zadnja web prijava: {item.last_login ? new Date(item.last_login).toLocaleDateString('hr-HR') : 'Nikad'}
-        </Text>
-        
-        <Text style={styles.userTimestamp}>
-          Zadnja prijava s mobilne aplikacije: {item.last_mobile_login ? new Date(item.last_mobile_login).toLocaleDateString('hr-HR') : 'Nikad'}
-        </Text>
-        
+        {isAdmin && (
+          <Text style={styles.userTimestamp}>
+            Zadnja web prijava: {item.last_login ? new Date(item.last_login).toLocaleDateString('hr-HR') : 'Nikad'}
+          </Text>
+        )}
+        {isAdmin && (
+          <Text style={styles.userTimestamp}>
+            Zadnja prijava s mobilne aplikacije: {item.last_mobile_login ? new Date(item.last_mobile_login).toLocaleDateString('hr-HR') : 'Nikad'}
+          </Text>
+        )}
         {isAdmin && item.updated_at && (
           <Text style={styles.userTimestamp}>
-            Ažurirano: {new Date(item.updated_at).toLocaleDateString('hr-HR')}
+            Profil ažuriran: {new Date(item.updated_at).toLocaleDateString('hr-HR')}
           </Text>
         )}
       </View>
@@ -492,6 +487,8 @@ export default function UsersScreen() {
             value={searchText}
             onChangeText={setSearchText}
             autoCapitalize="none"
+            autoComplete="off"
+            autoCorrect={false}
             returnKeyType="search"
             blurOnSubmit={true}
             onSubmitEditing={() => {
@@ -620,13 +617,13 @@ export default function UsersScreen() {
               style={styles.actionButton}
               onPress={() => handleEditProfile(selectedUser?.id)}
             >
-              <Text style={styles.actionButtonText}>✏️ Uredi profil</Text>
+              <Text style={styles.actionButtonText}>Uredi profil</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, styles.deleteButton]}
               onPress={handleDeleteUser}
             >
-              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>🗑️ Obriši</Text>
+              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Obriši</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.cancelButton}
@@ -651,6 +648,8 @@ export default function UsersScreen() {
                 value={formData.username}
                 onChangeText={(text) => setFormData({ ...formData, username: text })}
                 autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect={false}
               />
 
               <Text style={styles.label}>Lozinka *</Text>
@@ -660,6 +659,8 @@ export default function UsersScreen() {
                 onChangeText={(text) => setFormData({ ...formData, password: text })}
                 secureTextEntry
                 autoCapitalize="none"
+                autoComplete="new-password"
+                autoCorrect={false}
               />
 
               <Text style={styles.label}>Ime</Text>
@@ -667,6 +668,8 @@ export default function UsersScreen() {
                 style={styles.input}
                 value={formData.first_name}
                 onChangeText={(text) => setFormData({ ...formData, first_name: text })}
+                autoComplete="off"
+                autoCorrect={false}
               />
 
               <Text style={styles.label}>Prezime</Text>
@@ -674,6 +677,8 @@ export default function UsersScreen() {
                 style={styles.input}
                 value={formData.last_name}
                 onChangeText={(text) => setFormData({ ...formData, last_name: text })}
+                autoComplete="off"
+                autoCorrect={false}
               />
 
               <Text style={styles.label}>Email</Text>
@@ -709,13 +714,6 @@ export default function UsersScreen() {
 
               <View style={styles.modalButtons}>
                 <TouchableOpacity
-                  style={[styles.modalButton, creatingUser && styles.modalButtonDisabled]}
-                  onPress={handleCreateUser}
-                  disabled={creatingUser}
-                >
-                  <Text style={styles.modalButtonText}>{creatingUser ? 'Kreiranje...' : 'Kreiraj'}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
                   style={[styles.modalButton, styles.modalCancelButton]}
                   onPress={() => {
                     setShowCreateModal(false);
@@ -723,6 +721,13 @@ export default function UsersScreen() {
                   }}
                 >
                   <Text style={styles.modalCancelButtonText}>Odustani</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, creatingUser && styles.modalButtonDisabled]}
+                  onPress={handleCreateUser}
+                  disabled={creatingUser}
+                >
+                  <Text style={styles.modalButtonText}>{creatingUser ? 'Kreiranje...' : 'Kreiraj'}</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -747,6 +752,8 @@ export default function UsersScreen() {
                 value={formData.username}
                 onChangeText={(text) => setFormData({ ...formData, username: text })}
                 autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect={false}
               />
 
               <Text style={styles.label}>Ime</Text>
@@ -754,6 +761,8 @@ export default function UsersScreen() {
                 style={styles.input}
                 value={formData.first_name}
                 onChangeText={(text) => setFormData({ ...formData, first_name: text })}
+                autoComplete="off"
+                autoCorrect={false}
               />
 
               <Text style={styles.label}>Prezime</Text>
@@ -761,6 +770,8 @@ export default function UsersScreen() {
                 style={styles.input}
                 value={formData.last_name}
                 onChangeText={(text) => setFormData({ ...formData, last_name: text })}
+                autoComplete="off"
+                autoCorrect={false}
               />
 
               <Text style={styles.label}>Email</Text>
@@ -834,6 +845,8 @@ export default function UsersScreen() {
               onChangeText={(text) => setPasswordData({ ...passwordData, old_password: text })}
               secureTextEntry
               autoCapitalize="none"
+              autoComplete="current-password"
+              autoCorrect={false}
             />
 
             <Text style={styles.label}>Nova lozinka</Text>
@@ -843,6 +856,8 @@ export default function UsersScreen() {
               onChangeText={(text) => setPasswordData({ ...passwordData, new_password: text })}
               secureTextEntry
               autoCapitalize="none"
+              autoComplete="new-password"
+              autoCorrect={false}
             />
 
             <Text style={styles.label}>Potvrdi novu lozinku</Text>
@@ -852,6 +867,8 @@ export default function UsersScreen() {
               onChangeText={(text) => setPasswordData({ ...passwordData, new_password_confirm: text })}
               secureTextEntry
               autoCapitalize="none"
+              autoComplete="new-password"
+              autoCorrect={false}
               returnKeyType="done"
               onSubmitEditing={handleChangePassword}
             />
@@ -1095,12 +1112,11 @@ export default function UsersScreen() {
       <Modal visible={showFiltersModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.filtersModalContent}>
-            <Text style={styles.modalTitle}>Filteri i sortiranje</Text>
             
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* FILTERI */}
               <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>🔍 FILTERI</Text>
+                <Text style={styles.sectionTitle}>FILTERI</Text>
                 
                 <Text style={styles.label}>Uloga</Text>
                 <View style={styles.pickerContainer}>
@@ -1131,7 +1147,7 @@ export default function UsersScreen() {
 
               {/* SORTIRANJE */}
               <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>📊 SORTIRANJE</Text>
+                <Text style={styles.sectionTitle}>SORTIRANJE</Text>
                 
                 <Text style={styles.label}>Sortiraj po</Text>
                 <View style={styles.pickerContainer}>
@@ -1142,7 +1158,7 @@ export default function UsersScreen() {
                     <Text style={styles.pickerText}>
                       {tempSortField === 'username' ? 'Korisničko ime' :
                        tempSortField === 'last_name' ? 'Prezime' :
-                       tempSortField === 'last_login' ? 'Zadnja prijava' :
+                       tempSortField === 'last_login' ? 'Zadnja web prijava' :
                        tempSortField === 'last_mobile_login' ? 'Zadnja mobilna prijava' :
                        tempSortField === 'date_joined' ? 'Datum registracije' :
                        tempSortField === 'guard__priority_number' ? 'Prioritet' : tempSortField}
@@ -1178,7 +1194,7 @@ export default function UsersScreen() {
                 style={styles.filterApplyButton}
                 onPress={applyFilters}
               >
-                <Text style={styles.filterApplyButtonText}>✓ Primijeni</Text>
+                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1199,10 +1215,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#D3968C',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#0A3323',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -1213,13 +1229,13 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 10,
     paddingRight: 35,
     fontSize: 15,
     backgroundColor: '#F7F4D5',
-    color: '#839958',
+    color: '#0A3323',
   },
   searchButton: {
     backgroundColor: '#0A3323',
@@ -1248,7 +1264,7 @@ const styles = StyleSheet.create({
   },
   filterIcon: {
     fontSize: 20,
-    color: '#839958',
+    color: '#A6C27A',
   },
   activeFilters: {
     flexDirection: 'row',
@@ -1264,12 +1280,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterChipText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 13,
     fontWeight: '600',
   },
   filterChipClose: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -1281,7 +1297,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   createButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 15,
   },
@@ -1289,7 +1305,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   userCard: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -1303,7 +1319,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   currentUserCard: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderWidth: 2,
     borderColor: '#105666',
   },
@@ -1318,7 +1334,7 @@ const styles = StyleSheet.create({
   },
   currentUserButtonIcon: {
     fontSize: 18,
-    color: '#839958',
+    color: '#A6C27A',
   },
   userInfo: {
     flex: 1,
@@ -1331,39 +1347,43 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '600',
-    marginRight: 8,
-    color: '#839958',
+    marginBottom: 5,
+    color: '#0A3323',
   },
   inactiveBadge: {
     fontSize: 11,
-    color: '#D3968C',
-    backgroundColor: '#F7F4D5',
+    color: '#0A3323',
+    backgroundColor: '#D3968C',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
     fontWeight: '600',
+    marginLeft: 10,
   },
   userUsername: {
     fontSize: 13,
-    color: '#839958',
-    marginBottom: 4,
+    color: '#0A3323',
+    fontWeight: '500',
+    marginBottom: 5,
     fontStyle: 'italic',
   },
   userRole: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 4,
     fontWeight: '500',
   },
   userEmail: {
     fontSize: 12,
-    color: '#D3968C',
+    color: '#0A3323',
     marginBottom: 2,
   },
   userDetail: {
-    fontSize: 11,
-    color: '#D3968C',
-    marginTop: 2,
+    fontSize: 13,
+    marginBottom: 3,
+    marginTop: 3,
+    color: '#0A3323',
+    fontWeight: '500',
   },
   userMetadata: {
     flexDirection: 'row',
@@ -1371,13 +1391,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   userTimestamp: {
-    fontSize: 11,
-    color: '#D3968C',
-    marginTop: 2,
+    fontSize: 13,
+    color: '#0A3323',
+    marginTop: 3,
+    marginBottom: 3,
+    fontWeight: '500',
   },
   arrow: {
     fontSize: 24,
-    color: '#839958',
+    color: '#0A3323',
     marginLeft: 10,
   },
   modalOverlay: {
@@ -1393,7 +1415,7 @@ const styles = StyleSheet.create({
     width: '80%',
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   modalContent: {
     backgroundColor: '#F7F4D5',
@@ -1403,7 +1425,7 @@ const styles = StyleSheet.create({
     maxWidth: 500,
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   filtersModalContent: {
     backgroundColor: '#F7F4D5',
@@ -1413,18 +1435,18 @@ const styles = StyleSheet.create({
     maxWidth: 500,
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   filterSection: {
     marginBottom: 25,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 15,
   },
   pickerContainer: {
@@ -1436,13 +1458,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F7F4D5',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 14,
   },
   pickerText: {
     fontSize: 15,
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '500',
   },
   pickerArrow: {
@@ -1477,7 +1499,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterApplyButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '700',
     fontSize: 17,
   },
@@ -1495,12 +1517,12 @@ const styles = StyleSheet.create({
     maxWidth: 350,
     maxHeight: '60%',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   dropdownTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 15,
     textAlign: 'center',
   },
@@ -1513,17 +1535,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#F7F4D5',
   },
   dropdownItemActive: {
-    backgroundColor: '#105666',
+    backgroundColor: '#A6C27A',
   },
   dropdownItemText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   dropdownItemTextActive: {
-    color: '#F7F4D5',
+    color: '#0A3323',
     fontWeight: '600',
   },
   checkmark: {
@@ -1542,7 +1564,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
   },
   passwordModalContent: {
     backgroundColor: '#F7F4D5',
@@ -1551,30 +1573,30 @@ const styles = StyleSheet.create({
     width: '85%',
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 20,
     textAlign: 'center',
-    color: '#839958',
+    color: '#0A3323',
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 5,
     marginTop: 10,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     backgroundColor: '#F7F4D5',
-    color: '#839958',
+    color: '#0A3323',
   },
   roleButtons: {
     flexDirection: 'row',
@@ -1587,7 +1609,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     alignItems: 'center',
   },
   roleButtonActive: {
@@ -1595,11 +1617,11 @@ const styles = StyleSheet.create({
     borderColor: '#0A3323',
   },
   roleButtonText: {
-    color: '#D3968C',
+    color: '#0A3323',
     fontWeight: '600',
   },
   roleButtonTextActive: {
-    color: '#839958',
+    color: '#A6C27A',
   },
   actionButton: {
     padding: 15,
@@ -1614,7 +1636,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
-    color: '#839958',
+    color: '#A6C27A',
   },
   deleteButtonText: {
     color: '#0A3323',
@@ -1641,7 +1663,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -1650,6 +1672,8 @@ const styles = StyleSheet.create({
   },
   modalCancelButtonText: {
     color: '#0A3323',
+    fontWeight: '600',
+    fontSize: 16,
   },
   paginationContainer: {
     flexDirection: 'row',
@@ -1658,7 +1682,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: '#F7F4D5',
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
   },
   paginationButton: {
     backgroundColor: '#0A3323',
@@ -1672,7 +1696,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   paginationButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -1682,6 +1706,6 @@ const styles = StyleSheet.create({
   paginationText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
 });

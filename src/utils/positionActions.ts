@@ -142,7 +142,7 @@ export const getAvailableActions = (context: PositionActionContext): ActionInfo[
         actions.push({
           action: 'report_lateness',
           label: 'Prijavi kašnjenje',
-          color: '#839958',
+          color: '#A6C27A',
         });
       }
     } else if (!isTaken) {
@@ -150,7 +150,7 @@ export const getAvailableActions = (context: PositionActionContext): ActionInfo[
       actions.push({
         action: 'assign',
         label: 'Upiši se',
-        color: '#839958',
+        color: '#A6C27A',
       });
     } else {
       // Netko drugi je upisan
@@ -187,7 +187,7 @@ export const getAvailableActions = (context: PositionActionContext): ActionInfo[
         actions.push({
           action: 'assign',
           label: 'Upiši se',
-          color: '#839958',
+          color: '#A6C27A',
         });
       } else {
         // Netko drugi je upisan
@@ -229,7 +229,7 @@ export const getAvailableActions = (context: PositionActionContext): ActionInfo[
         actions.push({
           action: 'assign',
           label: 'Upiši se',
-          color: '#839958',
+          color: '#A6C27A',
         });
       } else {
         // Netko drugi je upisan

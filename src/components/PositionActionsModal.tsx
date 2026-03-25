@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   header: {
     marginBottom: 20,
@@ -123,8 +123,8 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   subtitle: {
-    fontSize: 13,
-    color: '#839958',
+    fontSize: 14,
+    color: '#0A3323',
     marginTop: 4,
   },
   actionsContainer: {
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   noActions: {
     textAlign: 'center',
-    color: '#839958',
+    color: '#0A3323',
     fontStyle: 'italic',
     paddingVertical: 20,
   },
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
   },
   cancelButtonText: {
     color: '#D3968C',

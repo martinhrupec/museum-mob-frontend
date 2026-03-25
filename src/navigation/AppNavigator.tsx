@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity, Text } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 import CustomSideMenu from '../components/CustomSideMenu';
+import WebResponsiveWrapper from '../components/WebResponsiveWrapper';
 import { getCurrentSystemSettings } from '../api/endpoints';
 import { SystemSettings } from '../types';
 import { usePeriodTimer } from '../hooks/usePeriodTimer';
@@ -68,31 +69,27 @@ export default function AppNavigator() {
   }
 
   const isAuthenticated = !!(accessToken || refreshToken);
-  const headerColor = periodInfo?.color || '#0A3323';
-  
+  const headerColor = periodInfo?.color || '#F7F4D5';
+
   // Helper za tekst boju na osnovu pozadine
   const getHeaderTextColor = (bgColor: string): string => {
-    switch (bgColor) {
-      case '#D3968C': // Rosy Brown
-        return '#F7F4D5'; // Beige
-      case '#839958': // Moss Green
-        return '#105666'; // Midnight Green
-      case '#105666': // Midnight Green
-        return '#839958'; // Moss Green
-      case '#F7F4D5': // Beige
-        return '#839958'; // Moss Green
-      case '#0A3323': // Dark Green
-      default:
-        return '#839958'; // Moss Green
+    if (bgColor === '#105666' || bgColor === '#0A3323') {
+      return '#F7F4D5';
     }
+    if (bgColor === '#A6C27A') {
+      return '#105666';
+    }
+    return '#0A3323';
   };
   
   const headerTextColor = getHeaderTextColor(headerColor);
 
   return (
+    <WebResponsiveWrapper>
     <NavigationContainer ref={setNavigationRef}>
       <Stack.Navigator
         screenOptions={({ navigation }) => ({
+          cardStyle: { flex: 1 },
           headerShown: isAuthenticated,
           headerStyle: { backgroundColor: headerColor },
           headerTintColor: headerTextColor,
@@ -136,5 +133,6 @@ export default function AppNavigator() {
         />
       )}
     </NavigationContainer>
+    </WebResponsiveWrapper>
   );
 }

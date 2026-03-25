@@ -7,10 +7,10 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Modal,
   Platform,
 } from 'react-native';
+import { crossAlert } from '../utils/alert';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuthStore } from '../store/authStore';
 import { getCurrentSystemSettings, updateSystemSettings, getAllNonWorkingDays, createNonWorkingDay } from '../api/endpoints';
@@ -55,7 +55,7 @@ export default function SystemSettingsScreen() {
       setSettings(data);
     } catch (error: any) {
       console.error('Error loading system settings:', error);
-      Alert.alert('Greška', 'Nije moguće učitati postavke sustava');
+      crossAlert('Greška', 'Nije moguće učitati postavke sustava');
     } finally {
       setLoading(false);
     }
@@ -96,7 +96,7 @@ export default function SystemSettingsScreen() {
 
   const handleCreateNwd = async () => {
     if (!nwdReason.trim()) {
-      Alert.alert('Greška', 'Unesite razlog');
+      crossAlert('Greška', 'Unesite razlog');
       return;
     }
 
@@ -119,10 +119,10 @@ export default function SystemSettingsScreen() {
       setShowCreateNwdModal(false);
       resetNwdForm();
       loadNonWorkingDays();
-      Alert.alert('Uspjeh', 'Neradni dan je uspješno dodan');
+      crossAlert('Uspjeh', 'Neradni dan je uspješno dodan');
     } catch (error: any) {
       console.error('Error creating non-working day:', error);
-      Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće dodati neradni dan');
+      crossAlert('Greška', error.response?.data?.detail || 'Nije moguće dodati neradni dan');
     } finally {
       setCreatingNwd(false);
     }
@@ -165,10 +165,10 @@ export default function SystemSettingsScreen() {
       console.log('Updated data received:', JSON.stringify(updated, null, 2));
       setSettings(updated);
       setEditMode(false);
-      Alert.alert('Uspjeh', 'Postavke sustava su ažurirane');
+      crossAlert('Uspjeh', 'Postavke sustava su ažurirane');
     } catch (error: any) {
       console.error('Error updating system settings:', error);
-      Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće ažurirati postavke');
+      crossAlert('Greška', error.response?.data?.detail || 'Nije moguće ažurirati postavke');
     } finally {
       setSaving(false);
     }
@@ -227,7 +227,7 @@ export default function SystemSettingsScreen() {
 
         {/* Radni dani */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📅 Radni dani</Text>
+          <Text style={styles.sectionTitle}>Radni dani</Text>
           <View style={styles.workdaysContainer}>
             {DAYS_OF_WEEK.map((dayLabel, index) => {
               const isSelected = (displayData.workdays || settings.workdays).includes(index);
@@ -257,7 +257,7 @@ export default function SystemSettingsScreen() {
 
         {/* Konfiguracijski period */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚙️ Konfiguracijski period</Text>
+          <Text style={styles.sectionTitle}>Konfiguracijski period</Text>
           
           <Text style={styles.subsectionTitle}>Početak:</Text>
           <View style={styles.row}>
@@ -295,7 +295,7 @@ export default function SystemSettingsScreen() {
 
         {/* Ručno upisivanje */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>✍️ Ručno upisivanje pozicija</Text>
+          <Text style={styles.sectionTitle}>Ručno upisivanje pozicija</Text>
           
           <Text style={styles.subsectionTitle}>Početak:</Text>
           <View style={styles.row}>
@@ -320,7 +320,7 @@ export default function SystemSettingsScreen() {
 
         {/* Grace period (Fer period ručnog upisivanja) */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⏱️ Fer period ručnog upisivanja</Text>
+          <Text style={styles.sectionTitle}>Fer period ručnog upisivanja</Text>
           
           <Text style={styles.subsectionTitle}>Početak:</Text>
           <View style={styles.row}>
@@ -345,7 +345,7 @@ export default function SystemSettingsScreen() {
 
         {/* Vrijeme života bodova */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⏳ Vrijeme života bodova</Text>
+          <Text style={styles.sectionTitle}>Vrijeme života bodova</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Broj tjedana:</Text>
             {editMode ? (
@@ -363,7 +363,7 @@ export default function SystemSettingsScreen() {
 
         {/* Nagrade */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎁 Nagrade</Text>
+          <Text style={styles.sectionTitle}>Nagrade</Text>
           
           <View style={styles.row}>
             <Text style={styles.label}>Završena pozicija:</Text>
@@ -410,7 +410,7 @@ export default function SystemSettingsScreen() {
 
         {/* Kazne */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⚠️ Kazne</Text>
+          <Text style={styles.sectionTitle}>Kazne</Text>
           
           <View style={styles.row}>
             <Text style={styles.label}>Zakašnjenje s obavijesti:</Text>
@@ -485,7 +485,7 @@ export default function SystemSettingsScreen() {
 
         {/* Satnica */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💰 Satnica</Text>
+          <Text style={styles.sectionTitle}>Satnica</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Satnica (EUR):</Text>
             {editMode ? (
@@ -503,7 +503,7 @@ export default function SystemSettingsScreen() {
 
         {/* Smjene - Radni dan */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🌅 Smjene - Radni dan</Text>
+          <Text style={styles.sectionTitle}>Smjene - Radni dan</Text>
           
           <Text style={styles.subsectionTitle}>Jutarnja smjena</Text>
           <View style={styles.row}>
@@ -564,7 +564,7 @@ export default function SystemSettingsScreen() {
 
         {/* Smjene - Vikend */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🌄 Smjene - Vikend</Text>
+          <Text style={styles.sectionTitle}>Smjene - Vikend</Text>
           
           <Text style={styles.subsectionTitle}>Jutarnja smjena</Text>
           <View style={styles.row}>
@@ -626,7 +626,7 @@ export default function SystemSettingsScreen() {
         {/* Neradni dani */}
         <View style={styles.section}>
           <View style={styles.nwdHeader}>
-            <Text style={styles.sectionTitle}>📅 Neradni dani</Text>
+            <Text style={styles.sectionTitle}>Neradni dani</Text>
             {isAdmin && (
               <TouchableOpacity
                 style={styles.addNwdButton}
@@ -663,29 +663,53 @@ export default function SystemSettingsScreen() {
             
             <ScrollView showsVerticalScrollIndicator={false}>
               <Text style={styles.modalLabel}>Datum *</Text>
-              <TouchableOpacity
-                style={styles.datePickerButton}
-                onPress={() => setShowNwdDatePicker(true)}
-              >
-                <Text style={styles.datePickerButtonText}>
-                  {nwdDate.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                </Text>
-                <Text style={styles.datePickerArrow}>📅</Text>
-              </TouchableOpacity>
-              
-              {showNwdDatePicker && (
-                <DateTimePicker
-                  value={nwdDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  minimumDate={new Date()}
-                  onChange={(event, selectedDate) => {
-                    setShowNwdDatePicker(Platform.OS === 'ios');
-                    if (selectedDate) {
-                      setNwdDate(selectedDate);
-                    }
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  value={nwdDate.toISOString().split('T')[0]}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => {
+                    const d = new Date(e.target.value + 'T00:00:00');
+                    if (!isNaN(d.getTime())) setNwdDate(d);
+                  }}
+                  style={{
+                    padding: 14,
+                    borderRadius: 8,
+                    backgroundColor: '#105666',
+                    color: '#F7F4D5',
+                    border: '1px solid #0A3323',
+                    fontSize: 16,
+                    width: '100%',
+                    boxSizing: 'border-box' as const,
                   }}
                 />
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={styles.datePickerButton}
+                    onPress={() => setShowNwdDatePicker(true)}
+                  >
+                    <Text style={styles.datePickerButtonText}>
+                      {nwdDate.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </Text>
+                    <Text style={styles.datePickerArrow}>📅</Text>
+                  </TouchableOpacity>
+
+                  {showNwdDatePicker && (
+                    <DateTimePicker
+                      value={nwdDate}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      minimumDate={new Date()}
+                      onChange={(event, selectedDate) => {
+                        setShowNwdDatePicker(Platform.OS === 'ios');
+                        if (selectedDate) {
+                          setNwdDate(selectedDate);
+                        }
+                      }}
+                    />
+                  )}
+                </>
               )}
               
               <Text style={styles.modalLabel}>Razlog *</Text>
@@ -694,7 +718,9 @@ export default function SystemSettingsScreen() {
                 value={nwdReason}
                 onChangeText={setNwdReason}
                 placeholder="npr. Sigurnosne vježbe"
-                placeholderTextColor="#839958"
+                placeholderTextColor="#A6C27A"
+                autoComplete="off"
+                autoCorrect={false}
               />
               
               <Text style={styles.modalLabel}>Cijeli dan?</Text>
@@ -755,7 +781,7 @@ export default function SystemSettingsScreen() {
                 disabled={creatingNwd}
               >
                 {creatingNwd ? (
-                  <ActivityIndicator size="small" color="#839958" />
+                  <ActivityIndicator size="small" color="#A6C27A" />
                 ) : (
                   <Text style={styles.modalSubmitButtonText}>Dodaj</Text>
                 )}
@@ -801,7 +827,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   scrollView: {
     flex: 1,
@@ -818,7 +844,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#839958',
+    color: '#0A3323',
   },
   editButton: {
     backgroundColor: '#0A3323',
@@ -827,12 +853,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   editButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 15,
   },
   section: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
@@ -845,13 +871,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 15,
   },
   subsectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginTop: 10,
     marginBottom: 8,
   },
@@ -863,12 +889,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 15,
-    color: '#839958',
+    color: '#0A3323',
     flex: 1,
   },
   value: {
     fontSize: 15,
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '600',
     flex: 1,
     textAlign: 'right',
@@ -876,12 +902,12 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
     borderRadius: 6,
     padding: 8,
     fontSize: 15,
-    backgroundColor: '#0A3323',
-    color: '#839958',
+    backgroundColor: '#F7F4D5',
+    color: '#0A3323',
     textAlign: 'right',
   },
   workdaysContainer: {
@@ -895,13 +921,13 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
     alignItems: 'center',
     backgroundColor: '#F7F4D5',
   },
   dayButtonActive: {
     backgroundColor: '#0A3323',
-    borderColor: '#839958',
+    borderColor: '#0A3323',
   },
   dayButtonText: {
     fontSize: 14,
@@ -909,14 +935,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dayButtonTextActive: {
-    color: '#839958',
+    color: '#A6C27A',
   },
   footer: {
     flexDirection: 'row',
     padding: 15,
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#0A3323',
     gap: 10,
   },
   footerButton: {
@@ -929,21 +955,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F4D5',
   },
   cancelButtonText: {
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '600',
     fontSize: 16,
   },
   saveButton: {
     backgroundColor: '#0A3323',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
   },
   saveButtonDisabled: {
     backgroundColor: '#D3968C',
     opacity: 0.6,
   },
   saveButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -960,15 +986,15 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
   },
   addNwdButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 14,
   },
   emptyNwdText: {
-    color: '#D3968C',
+    color: '#0A3323',
     fontStyle: 'italic',
     textAlign: 'center',
     padding: 10,
@@ -990,16 +1016,16 @@ const styles = StyleSheet.create({
   nwdDate: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#839958',
+    color: '#0A3323',
   },
   nwdShift: {
     fontSize: 14,
-    color: '#D3968C',
+    color: '#105666',
     fontStyle: 'italic',
   },
   nwdReason: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
   },
   // Modal styles
   modalOverlay: {
@@ -1016,44 +1042,44 @@ const styles = StyleSheet.create({
     width: '100%',
     maxHeight: '80%',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 20,
     textAlign: 'center',
   },
   modalLabel: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
     marginTop: 12,
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     fontSize: 15,
     backgroundColor: '#0A3323',
-    color: '#839958',
+    color: '#A6C27A',
   },
   datePickerButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     backgroundColor: '#0A3323',
   },
   datePickerButtonText: {
     fontSize: 15,
-    color: '#839958',
+    color: '#A6C27A',
   },
   datePickerArrow: {
     fontSize: 18,
@@ -1067,13 +1093,13 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     alignItems: 'center',
     backgroundColor: '#F7F4D5',
   },
   switchButtonActive: {
     backgroundColor: '#0A3323',
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   switchButtonText: {
     fontSize: 15,
@@ -1081,7 +1107,7 @@ const styles = StyleSheet.create({
     color: '#D3968C',
   },
   switchButtonTextActive: {
-    color: '#839958',
+    color: '#A6C27A',
   },
   modalFooter: {
     flexDirection: 'row',
@@ -1095,10 +1121,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   modalCancelButtonText: {
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -1110,7 +1136,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalSubmitButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 16,
   },

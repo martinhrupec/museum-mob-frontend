@@ -8,18 +8,11 @@ interface PeriodCountdownProps {
 
 // Helper za tekst boju na osnovu pozadine
 const getTextColor = (bgColor: string): string => {
-  switch (bgColor) {
-    case '#D3968C': // Rosy Brown
-      return '#F7F4D5'; // Beige
-    case '#839958': // Moss Green
-      return '#105666'; // Midnight Green
-    case '#105666': // Midnight Green
-      return '#839958'; // Moss Green
-    case '#F7F4D5': // Beige
-      return '#839958'; // Moss Green
-    default:
-      return '#839958';
+  // Tamna pozadina dobiva svijetli tekst, sve ostalo tamni tekst
+  if (bgColor === '#105666') {
+    return '#F7F4D5';
   }
+  return '#0A3323';
 };
 
 export default function PeriodCountdown({ periodInfo }: PeriodCountdownProps) {
@@ -68,7 +61,7 @@ const styles = StyleSheet.create({
   },
   containerWithBorder: {
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   content: {
     alignItems: 'center',

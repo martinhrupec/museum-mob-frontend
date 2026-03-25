@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   title: {
     fontSize: 18,
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 15,
     fontWeight: '600',
   },

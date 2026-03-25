@@ -5,12 +5,12 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   ScrollView, 
-  ActivityIndicator, 
-  Modal, 
-  Alert,
+  ActivityIndicator,
+  Modal,
   TextInput,
   Switch,
 } from 'react-native';
+import { crossAlert } from '../utils/alert';
 import { useAuthStore } from '../store/authStore';
 import { 
   getCurrentSystemSettings, 
@@ -400,7 +400,7 @@ export default function ConfigurationScreen() {
       setExhibitionPreferences(myExhibitionPrefs || null);
     } catch (error: any) {
       console.error('Error loading settings:', error);
-      Alert.alert('Greška', 'Nije moguće učitati postavke sustava.');
+      crossAlert('Greška', 'Nije moguće učitati postavke sustava.');
     } finally {
       setLoading(false);
     }
@@ -522,7 +522,7 @@ export default function ConfigurationScreen() {
       setGuardConfigurations(configs);
     } catch (error) {
       console.error('Error loading admin configuration data:', error);
-      Alert.alert('Greška', 'Nije moguće učitati podatke konfiguracija.');
+      crossAlert('Greška', 'Nije moguće učitati podatke konfiguracija.');
     } finally {
       setLoading(false);
     }
@@ -547,7 +547,7 @@ export default function ConfigurationScreen() {
     
     const shifts = parseInt(availabilityInput, 10);
     if (isNaN(shifts) || shifts < 1) {
-      Alert.alert('Greška', 'Unesite validan broj smjena (minimalno 1).');
+      crossAlert('Greška', 'Unesite validan broj smjena (minimalno 1).');
       return;
     }
     
@@ -561,7 +561,7 @@ export default function ConfigurationScreen() {
         availability: response?.availability ?? shifts,
         availability_updated_at: response?.availability_updated_at ?? new Date().toISOString(),
       }));
-      Alert.alert('Uspjeh', 'Dostupnost je uspješno postavljena.');
+      crossAlert('Uspjeh', 'Dostupnost je uspješno postavljena.');
     } catch (error: any) {
       console.error('Error saving availability:', error);
       // Izvuci detaljnu poruku sa servera
@@ -587,7 +587,7 @@ export default function ConfigurationScreen() {
           if (errors) message = errors;
         }
       }
-      Alert.alert('Greška', message);
+      crossAlert('Greška', message);
     } finally {
       setSavingAvailability(false);
     }
@@ -631,7 +631,7 @@ export default function ConfigurationScreen() {
     if (!guardUser?.guard_profile?.id || !settings) return;
     
     if ((selectedPeriods || []).length === 0) {
-      Alert.alert('Greška', 'Morate odabrati barem jedan radni period.');
+      crossAlert('Greška', 'Morate odabrati barem jedan radni period.');
       return;
     }
     
@@ -677,8 +677,34 @@ export default function ConfigurationScreen() {
         console.warn('Failed to refresh available days:', err);
       }
       
+      // Re-fetch day preferences, exhibition preferences i izložbe jer backend briše
+      // preferencije kad se work periods promijene, a dostupne izložbe ovise o radnim danima
+      try {
+        const [dayPrefsData, exhibitionPrefsData, exhibitionsData] = await Promise.all([
+          getAllGuardDayPreferences(),
+          getAllGuardExhibitionPreferences(),
+          getExhibitionsNextWeek(),
+        ]);
+        const getGuardId = (item: any) => typeof item.guard === 'number' ? item.guard : item.guard?.id;
+        const myDayPrefs = (Array.isArray(dayPrefsData) ? dayPrefsData : []).find(
+          (dp: any) => getGuardId(dp) === guardUser.guard_profile.id &&
+                       (dp.is_template || dp.next_week_start === settings.next_week_start)
+        );
+        setDayPreferences(myDayPrefs || null);
+        const myExhibitionPrefs = (Array.isArray(exhibitionPrefsData) ? exhibitionPrefsData : []).find(
+          (ep: any) => getGuardId(ep) === guardUser.guard_profile.id &&
+                       (ep.is_template || ep.next_week_start === settings.next_week_start)
+        );
+        setExhibitionPreferences(myExhibitionPrefs || null);
+        if (Array.isArray(exhibitionsData)) {
+          setExhibitions(exhibitionsData);
+        }
+      } catch (err) {
+        console.warn('Failed to refresh preferences after saving work periods:', err);
+      }
+
       setWorkPeriodsModalVisible(false);
-      Alert.alert('Uspjeh', 'Radni periodi su uspješno postavljeni.');
+      crossAlert('Uspjeh', 'Radni periodi su uspješno postavljeni.');
     } catch (error: any) {
       console.error('Error saving work periods:', error);
       console.error('Response data:', JSON.stringify(error.response?.data));
@@ -706,7 +732,7 @@ export default function ConfigurationScreen() {
           if (errors) message = errors;
         }
       }
-      Alert.alert('Greška', message);
+      crossAlert('Greška', message);
     } finally {
       setSavingWorkPeriods(false);
     }
@@ -724,7 +750,7 @@ export default function ConfigurationScreen() {
     console.log('Parsed dayNumbers:', dayNumbers);
     
     if (dayNumbers.length === 0) {
-      Alert.alert('Upozorenje', 'Nema dostupnih dana za postavljanje preferencija. Prvo postavite radne periode.');
+      crossAlert('Upozorenje', 'Nema dostupnih dana za postavljanje preferencija. Prvo postavite radne periode.');
       return;
     }
     
@@ -762,7 +788,7 @@ export default function ConfigurationScreen() {
     if (!guardUser?.guard_profile?.id || !settings) return;
     
     if ((orderedDays || []).length === 0) {
-      Alert.alert('Greška', 'Nema dana za spremanje.');
+      crossAlert('Greška', 'Nema dana za spremanje.');
       return;
     }
     
@@ -782,7 +808,7 @@ export default function ConfigurationScreen() {
         created_at: new Date().toISOString(),
       });
       setDayPreferencesModalVisible(false);
-      Alert.alert('Uspjeh', 'Preferencije za dane su uspješno postavljene.');
+      crossAlert('Uspjeh', 'Preferencije za dane su uspješno postavljene.');
     } catch (error: any) {
       console.error('Error saving day preferences:', error);
       // Izvuci detaljnu poruku sa servera
@@ -808,7 +834,7 @@ export default function ConfigurationScreen() {
           if (errors) message = errors;
         }
       }
-      Alert.alert('Greška', message);
+      crossAlert('Greška', message);
     } finally {
       setSavingDayPrefs(false);
     }
@@ -855,7 +881,7 @@ export default function ConfigurationScreen() {
     if (!guardUser?.guard_profile?.id || !settings) return;
     
     if ((orderedExhibitions || []).length === 0) {
-      Alert.alert('Greška', 'Nema izložbi za spremanje.');
+      crossAlert('Greška', 'Nema izložbi za spremanje.');
       return;
     }
     
@@ -875,7 +901,7 @@ export default function ConfigurationScreen() {
         created_at: new Date().toISOString(),
       });
       setExhibitionPreferencesModalVisible(false);
-      Alert.alert('Uspjeh', 'Preferencije za izložbe su uspješno postavljene.');
+      crossAlert('Uspjeh', 'Preferencije za izložbe su uspješno postavljene.');
     } catch (error: any) {
       console.error('Error saving exhibition preferences:', error);
       // Izvuci detaljnu poruku sa servera
@@ -901,7 +927,7 @@ export default function ConfigurationScreen() {
           if (errors) message = errors;
         }
       }
-      Alert.alert('Greška', message);
+      crossAlert('Greška', message);
     } finally {
       setSavingExhibitionPrefs(false);
     }
@@ -1066,18 +1092,21 @@ export default function ConfigurationScreen() {
             {/* Preferencije za izložbe */}
             <View style={styles.adminConfigSection}>
               <Text style={styles.adminSectionTitle}>Preferencije za izložbe</Text>
-              {config.exhibitionPreferences?.exhibition_order && (config.exhibitionPreferences.exhibition_order || []).length > 0 ? (
-                (config.exhibitionPreferences.exhibition_order || []).map((exId, idx) => (
+              {(() => {
+                const exhibitionOrder = config.exhibitionPreferences?.exhibition_order || [];
+                const currentIds = (exhibitions || []).map(e => e.id);
+                const isStale = currentIds.some(id => !exhibitionOrder.includes(id));
+                const filteredOrder = exhibitionOrder.filter(id => currentIds.includes(id));
+                if (isStale || filteredOrder.length === 0) {
+                  return <Text style={styles.adminSectionEmpty}>Nije postavljeno</Text>;
+                }
+                return filteredOrder.map((exId, idx) => (
                   <View key={exId} style={styles.adminPrefItem}>
-                    <Text style={styles.adminPrefStars}>
-                      {renderStars(idx, (config.exhibitionPreferences?.exhibition_order || []).length)}
-                    </Text>
+                    <Text style={styles.adminPrefStars}>{renderStars(idx, filteredOrder.length)}</Text>
                     <Text style={styles.adminPrefText}>{getExhibitionName(exId)}</Text>
                   </View>
-                ))
-              ) : (
-                <Text style={styles.adminSectionEmpty}>Nije postavljeno</Text>
-              )}
+                ));
+              })()}
             </View>
           </View>
         )}
@@ -1193,7 +1222,7 @@ export default function ConfigurationScreen() {
               disabled={!isConfigPeriod || savingAvailability}
             >
               {savingAvailability ? (
-                <ActivityIndicator color="#839958" size="small" />
+                <ActivityIndicator color="#A6C27A" size="small" />
               ) : (
                 <Text style={styles.saveButtonText}>
                   {hasAvailability ? 'Ažuriraj' : 'Spremi'}
@@ -1341,15 +1370,6 @@ export default function ConfigurationScreen() {
               {/* Day preferences card */}
               <View style={styles.preferenceCard}>
                 <Text style={styles.cardTitle}>Dani</Text>
-                {(() => {
-                  console.log('Rendering day prefs card:', {
-                    hasPrefs: !!dayPreferences,
-                    hasOrder: !!dayPreferences?.day_order,
-                    orderLength: dayPreferences?.day_order?.length,
-                    fullPrefs: JSON.stringify(dayPreferences)
-                  });
-                  return null;
-                })()}
                 {dayPreferences?.day_order && (dayPreferences.day_order || []).length > 0 ? (
                   (dayPreferences.day_order || []).map((day, idx) => (
                     <View key={day} style={styles.preferenceItem}>
@@ -1366,24 +1386,20 @@ export default function ConfigurationScreen() {
               <View style={styles.preferenceCard}>
                 <Text style={styles.cardTitle}>Izložbe</Text>
                 {(() => {
-                  console.log('Rendering exhibition prefs card:', {
-                    hasPrefs: !!exhibitionPreferences,
-                    hasOrder: !!exhibitionPreferences?.exhibition_order,
-                    orderLength: exhibitionPreferences?.exhibition_order?.length,
-                    fullPrefs: JSON.stringify(exhibitionPreferences)
-                  });
-                  return null;
-                })()}
-                {exhibitionPreferences?.exhibition_order && (exhibitionPreferences.exhibition_order || []).length > 0 ? (
-                  (exhibitionPreferences.exhibition_order || []).map((exId, idx) => (
+                  const exhibitionOrder = exhibitionPreferences?.exhibition_order || [];
+                  const currentIds = (exhibitions || []).map(e => e.id);
+                  const isStale = currentIds.some(id => !exhibitionOrder.includes(id));
+                  const filteredOrder = exhibitionOrder.filter(id => currentIds.includes(id));
+                  if (isStale || filteredOrder.length === 0) {
+                    return <Text style={styles.noPreferences}>Nije postavljeno</Text>;
+                  }
+                  return filteredOrder.map((exId, idx) => (
                     <View key={exId} style={styles.preferenceItem}>
-                      <Text style={styles.preferenceStars}>{renderStars(idx, (exhibitionPreferences?.exhibition_order || []).length)}</Text>
+                      <Text style={styles.preferenceStars}>{renderStars(idx, filteredOrder.length)}</Text>
                       <Text style={styles.preferenceName} numberOfLines={1}>{getExhibitionName(exId)}</Text>
                     </View>
-                  ))
-                ) : (
-                  <Text style={styles.noPreferences}>Nije postavljeno</Text>
-                )}
+                  ));
+                })()}
               </View>
             </View>
             
@@ -1655,7 +1671,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   title: {
     fontSize: 24,
@@ -1664,9 +1680,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   weekInfo: {
-    fontSize: 14,
-    color: '#839958',
+    fontSize: 16,
+    color: '#0A3323',
     marginBottom: 16,
+    fontWeight: '600'
   },
   periodIndicator: {
     padding: 12,
@@ -1674,7 +1691,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   periodActive: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
   },
   periodInactive: {
     backgroundColor: '#D3968C',
@@ -1691,7 +1708,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   section: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -1704,12 +1721,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
   },
   sectionDescription: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 16,
   },
   availabilityStatus: {
@@ -1718,7 +1735,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   availabilityStatusGreen: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
   },
   availabilityStatusRed: {
     backgroundColor: '#D3968C',
@@ -1735,7 +1752,7 @@ const styles = StyleSheet.create({
   availabilityInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -1750,7 +1767,7 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   saveButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -1759,7 +1776,7 @@ const styles = StyleSheet.create({
   },
   currentValue: {
     fontSize: 13,
-    color: '#839958',
+    color: '#0A3323',
     marginTop: 8,
     fontStyle: 'italic',
   },
@@ -1772,7 +1789,7 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#839958',
+    color: '#F7F4D5',
     marginBottom: 8,
   },
   periodItem: {
@@ -1796,7 +1813,7 @@ const styles = StyleSheet.create({
   periodDayName: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#839958',
+    color: '#F7F4D5',
     marginBottom: 4,
   },
   periodBox: {
@@ -1807,7 +1824,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   periodBoxActive: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
   },
   periodBoxInactive: {
     backgroundColor: '#D3968C',
@@ -1822,7 +1839,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 15,
   },
@@ -1851,7 +1868,7 @@ const styles = StyleSheet.create({
   },
   preferenceStars: {
     fontSize: 10,
-    color: '#839958',
+    color: '#F7F4D5',
     marginRight: 6,
     minWidth: 30,
   },
@@ -1878,7 +1895,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   prefButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 13,
   },
@@ -1894,20 +1911,20 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#0A3323',
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#839958',
+    color: '#A6C27A',
   },
   modalCancel: {
     fontSize: 16,
-    color: '#839958',
+    color: '#A6C27A',
   },
   modalSave: {
     fontSize: 16,
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
   },
   modalContent: {
@@ -1915,7 +1932,7 @@ const styles = StyleSheet.create({
   },
   modalDescription: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -1926,7 +1943,7 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     width: '48%',
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     marginBottom: 4,
@@ -1934,7 +1951,7 @@ const styles = StyleSheet.create({
   dayHeader: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -1947,7 +1964,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   shiftButtonSelected: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
     borderColor: '#F7F4D5',
   },
   shiftButtonText: {
@@ -1960,21 +1977,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   shiftUnavailable: {
-    backgroundColor: '#D3968C',
+    backgroundColor: '#A6C27A',
     padding: 10,
     borderRadius: 6,
     marginBottom: 6,
   },
   shiftUnavailableText: {
-    fontSize: 11,
-    color: '#F7F4D5',
+    fontSize: 12,
+    color: '#0A3323',
     textAlign: 'center',
     fontStyle: 'italic',
+    fontWeight: '600',
   },
   dragItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
@@ -1992,13 +2010,13 @@ const styles = StyleSheet.create({
   dragItemRank: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     marginRight: 12,
     minWidth: 30,
   },
   dragItemText: {
     fontSize: 15,
-    color: '#F7F4D5',
+    color: '#0A3323',
     flex: 1,
   },
   dragItemButtons: {
@@ -2006,7 +2024,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   moveButton: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -2026,7 +2044,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   guardCard: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#0A3323',
@@ -2041,9 +2059,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#105666',
+    backgroundColor: '#A6C27A',
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   guardCardHeaderContent: {
     flex: 1,
@@ -2051,12 +2069,13 @@ const styles = StyleSheet.create({
   guardCardName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#F7F4D5',
+    color: '#105666',
     marginBottom: 2,
   },
   guardCardUsername: {
-    fontSize: 13,
-    color: '#839958',
+    fontSize: 15,
+    color: '#105666',
+    fontWeight: '600'
   },
   expandIcon: {
     fontSize: 16,
@@ -2072,18 +2091,20 @@ const styles = StyleSheet.create({
   adminSectionTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#F7F4D5',
+    color: '#0A3323',
     marginBottom: 8,
   },
   adminSectionValue: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '600',
+    fontStyle: 'italic',
   },
   adminSectionEmpty: {
     fontSize: 13,
-    color: '#D3968C',
+    color: '#F7F4D5',
     fontStyle: 'italic',
+    fontWeight: '600',
   },
   adminSectionItem: {
     fontSize: 13,
@@ -2101,13 +2122,13 @@ const styles = StyleSheet.create({
     width: 36,
   },
   adminPeriodDayName: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 3,
   },
   adminPeriodDayNameInactive: {
-    color: '#D3968C',
+    color: '#F7F4D5',
   },
   adminPeriodBox: {
     width: 28,
@@ -2116,7 +2137,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   adminPeriodBoxActive: {
-    backgroundColor: '#839958',
+    backgroundColor: '#105666',
   },
   adminPeriodBoxInactive: {
     backgroundColor: '#D3968C',
@@ -2128,14 +2149,15 @@ const styles = StyleSheet.create({
   },
   adminPrefStars: {
     fontSize: 10,
-    color: '#839958',
+    color: '#105666',
     marginRight: 8,
     minWidth: 30,
   },
   adminPrefText: {
     fontSize: 13,
-    color: '#F7F4D5',
+    color: '#0A3323',
     flex: 1,
+    fontWeight: '600',
   },
   emptyState: {
     padding: 40,
@@ -2143,7 +2165,7 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 15,
-    color: '#839958',
+    color: '#0A3323',
     textAlign: 'center',
     fontStyle: 'italic',
   },

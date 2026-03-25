@@ -9,9 +9,9 @@ import {
   RefreshControl,
   Modal,
   TextInput,
-  Alert,
   ScrollView,
 } from 'react-native';
+import { crossAlert } from '../utils/alert';
 import { Picker } from '@react-native-picker/picker';
 import { useAuthStore } from '../store/authStore';
 import {
@@ -75,16 +75,22 @@ export default function PointsScreen() {
 
   useEffect(() => {
     fetchInitialData();
+    return () => {
+      setShowFiltersModal(false);
+      setShowGuardDropdown(false);
+      setShowSortDropdown(false);
+      setShowCreateModal(false);
+      setShowLateModal(false);
+      setShowExplanationModal(false);
+      setShowLateGuardPicker(false);
+      setShowGuardPickerModal(false);
+    };
   }, []);
 
   useEffect(() => {
     if (initialLoadDone.current) {
-      // Reset to page 1 when filters change
-      if (page !== 1) {
-        setPage(1);
-      } else {
-        fetchPoints(1);
-      }
+      // Reset to page 1 and fetch data when filters change
+      fetchPoints(1);
     }
   }, [guardFilter, sortOrder]);
 
@@ -105,7 +111,7 @@ export default function PointsScreen() {
       initialLoadDone.current = true;
     } catch (error) {
       console.error('Error fetching initial data:', error);
-      Alert.alert('Greška', 'Nije moguće učitati podatke');
+      crossAlert('Greška', 'Nije moguće učitati podatke');
     } finally {
       setLoading(false);
     }
@@ -136,7 +142,7 @@ export default function PointsScreen() {
       setPage(pageNum);
     } catch (error: any) {
       console.error('Error fetching points:', error);
-      Alert.alert('Greška', 'Nije moguće učitati bodove');
+      crossAlert('Greška', 'Nije moguće učitati bodove');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -153,6 +159,14 @@ export default function PointsScreen() {
     setTempGuardFilter(guardFilter);
     setTempSortOrder(sortOrder);
     setShowFiltersModal(true);
+      // These lines ensure no other modals are open
+    setShowGuardDropdown(false);
+    setShowSortDropdown(false);
+    setShowCreateModal(false);
+    setShowLateModal(false);
+    setShowExplanationModal(false);
+    setShowLateGuardPicker(false);
+    setShowGuardPickerModal(false);
   };
 
   const applyFilters = () => {
@@ -167,21 +181,21 @@ export default function PointsScreen() {
 
   const handleCreatePoint = async () => {
     if (!selectedGuardId) {
-      Alert.alert('Greška', 'Odaberite čuvara');
+      crossAlert('Greška', 'Odaberite čuvara');
       return;
     }
 
     const pointsNum = parseFloat(pointsValue);
     if (isNaN(pointsNum)) {
-      Alert.alert('Greška', 'Bodovi moraju biti broj');
+      crossAlert('Greška', 'Bodovi moraju biti broj');
       return;
     }
     if (pointsNum < -10 || pointsNum > 10) {
-      Alert.alert('Greška', 'Bodovi moraju biti između -10 i 10');
+      crossAlert('Greška', 'Bodovi moraju biti između -10 i 10');
       return;
     }
     if (!explanation.trim()) {
-      Alert.alert('Greška', 'Unesite objašnjenje');
+      crossAlert('Greška', 'Unesite objašnjenje');
       return;
     }
 
@@ -195,10 +209,10 @@ export default function PointsScreen() {
       setShowCreateModal(false);
       resetCreateForm();
       fetchPoints(1);
-      Alert.alert('Uspjeh', 'Bodovi su uspješno dodijeljeni');
+      crossAlert('Uspjeh', 'Bodovi su uspješno dodijeljeni');
     } catch (error: any) {
       console.error('Error creating point:', error);
-      Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće dodijeliti bodove');
+      crossAlert('Greška', error.response?.data?.detail || 'Nije moguće dodijeliti bodove');
     } finally {
       setSubmitting(false);
     }
@@ -206,11 +220,11 @@ export default function PointsScreen() {
 
   const handleLateWithoutNotification = async () => {
     if (!lateGuardId) {
-      Alert.alert('Greška', 'Odaberite čuvara');
+      crossAlert('Greška', 'Odaberite čuvara');
       return;
     }
     if (!settings) {
-      Alert.alert('Greška', 'Postavke sustava nisu učitane');
+      crossAlert('Greška', 'Postavke sustava nisu učitane');
       return;
     }
 
@@ -226,10 +240,10 @@ export default function PointsScreen() {
       setShowLateModal(false);
       setLateGuardId(null);
       fetchPoints(1);
-      Alert.alert('Uspjeh', 'Kazna za zakašnjenje bez obavijesti je dodijeljena');
+      crossAlert('Uspjeh', 'Kazna za zakašnjenje bez obavijesti je dodijeljena');
     } catch (error: any) {
       console.error('Error creating late penalty:', error);
-      Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće dodijeliti kaznu');
+      crossAlert('Greška', error.response?.data?.detail || 'Nije moguće dodijeliti kaznu');
     } finally {
       setLateSubmitting(false);
     }
@@ -283,7 +297,7 @@ export default function PointsScreen() {
         </View>
         <Text style={styles.explanation}>{item.explanation}</Text>
         <View style={styles.pointFooter}>
-          <Text style={styles.dateText}>📅 Datum dodjele: {formatDate(item.date_awarded)}</Text>
+          <Text style={styles.dateText}>{formatDate(item.date_awarded)}</Text>
         </View>
       </View>
     );
@@ -294,51 +308,51 @@ export default function PointsScreen() {
 
     return (
       <View style={styles.rulesCard}>
-        <Text style={styles.rulesTitle}>📋 Trenutna pravila - pozitivni i negativni bodovi</Text>
+        <Text style={styles.rulesTitle}>Trenutna pravila - pozitivni i negativni bodovi</Text>
         
         <View style={styles.rulesSection}>
-          <Text style={styles.rulesSectionTitle}>🎁 Nagrade (pozitivni bodovi)</Text>
+          <Text style={styles.rulesSectionTitle}>Pozitivni bodovi</Text>
           <View style={styles.ruleRow}>
             <Text style={styles.ruleLabel}>Završena pozicija:</Text>
-            <Text style={styles.ruleValuePositive}>+{settings.award_for_position_completion}</Text>
+            <Text style={styles.ruleValue}>+{settings.award_for_position_completion}</Text>
           </View>
           <View style={styles.ruleRow}>
             <Text style={styles.ruleLabel}>Završena nedjeljna pozicija:</Text>
-            <Text style={styles.ruleValuePositive}>+{settings.award_for_sunday_position_completion}</Text>
+            <Text style={styles.ruleValue}>+{settings.award_for_sunday_position_completion}</Text>
           </View>
           <View style={styles.ruleRow}>
             <Text style={styles.ruleLabel}>Uskakanje na otkazanu poziciju:</Text>
-            <Text style={styles.ruleValuePositive}>+{settings.award_for_jumping_in_on_cancelled_position}</Text>
+            <Text style={styles.ruleValue}>+{settings.award_for_jumping_in_on_cancelled_position}</Text>
           </View>
         </View>
 
         <View style={styles.rulesSection}>
-          <Text style={styles.rulesSectionTitle}>⚠️ Kazne (negativni bodovi)</Text>
+          <Text style={styles.rulesSectionTitle}>Negativni bodovi</Text>
           <View style={styles.ruleRow}>
-            <Text style={styles.ruleLabel}>Zakašnjenje s obaviješću:</Text>
-            <Text style={styles.ruleValueNegative}>{settings.penalty_for_being_late_with_notification}</Text>
+            <Text style={styles.ruleLabel}>Zakašnjenje uz obavijest:</Text>
+            <Text style={styles.ruleValue}>{settings.penalty_for_being_late_with_notification}</Text>
           </View>
           <View style={styles.ruleRow}>
             <Text style={styles.ruleLabel}>Zakašnjenje bez obavijesti:</Text>
-            <Text style={styles.ruleValueNegative}>{settings.penalty_for_being_late_without_notification}</Text>
+            <Text style={styles.ruleValue}>{settings.penalty_for_being_late_without_notification}</Text>
           </View>
           <View style={styles.ruleRow}>
             <Text style={styles.ruleLabel}>Otkazivanje na dan pozicije:</Text>
-            <Text style={styles.ruleValueNegative}>{settings.penalty_for_position_cancellation_on_the_position_day}</Text>
+            <Text style={styles.ruleValue}>{settings.penalty_for_position_cancellation_on_the_position_day}</Text>
           </View>
           <View style={styles.ruleRow}>
             <Text style={styles.ruleLabel}>Otkazivanje prije dana pozicije:</Text>
-            <Text style={styles.ruleValueNegative}>{settings.penalty_for_position_cancellation_before_the_position_day}</Text>
+            <Text style={styles.ruleValue}>{settings.penalty_for_position_cancellation_before_the_position_day}</Text>
           </View>
           <View style={styles.ruleRow}>
-            <Text style={styles.ruleLabel}>Manje od minimalnog broja pozicija:</Text>
-            <Text style={styles.ruleValueNegative}>{settings.penalty_for_assigning_less_then_minimal_positions}</Text>
+            <Text style={styles.ruleLabel}>Upis manje od minimalnog broja pozicija:</Text>
+            <Text style={styles.ruleValue}>{settings.penalty_for_assigning_less_then_minimal_positions}</Text>
           </View>
         </View>
 
         <View style={styles.pointsLifeSection}>
           <Text style={styles.pointsLifeText}>
-            ⏳ Vrijeme života bodova: <Text style={styles.pointsLifeValue}>{settings.points_life_weeks} tjedana</Text>
+            Vrijeme života bodova: <Text style={styles.pointsLifeValue}>{settings.points_life_weeks}</Text>
           </Text>
         </View>
       </View>
@@ -354,10 +368,10 @@ export default function PointsScreen() {
           </Text>
         )}
         <TouchableOpacity
-          style={styles.explanationButton}
+          style={styles.headerButton}
           onPress={() => setShowExplanationModal(true)}
         >
-          <Text style={styles.explanationButtonText}>ℹ️ Objašnjenje računanja prioritetnog broja</Text>
+          <Text style={styles.headerButtonText}>Objašnjenje računanja prioritetnog broja</Text>
         </TouchableOpacity>
       </View>
     );
@@ -372,13 +386,13 @@ export default function PointsScreen() {
             style={styles.headerButton}
             onPress={() => setShowCreateModal(true)}
           >
-            <Text style={styles.headerButtonText}>+ Dodjeli proizvoljne bodove</Text>
+            <Text style={styles.headerButtonText}>Dodijeli proizvoljne bodove</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.headerButton, styles.lateButton]}
+            style={[styles.headerButton]}
             onPress={() => setShowLateModal(true)}
           >
-            <Text style={styles.headerButtonText}>⏰ Zakašnjenje bez obavijesti</Text>
+            <Text style={styles.headerButtonText}>Zakašnjenje bez obavijesti</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.filterButton}
@@ -396,7 +410,7 @@ export default function PointsScreen() {
       {renderPrioritySection()}
 
       {/* Section Title */}
-      <Text style={styles.sectionTitle}>📊 Lista bodova</Text>
+      <Text style={styles.sectionTitle}>Ostvareni bodovi</Text>
     </View>
   );
 
@@ -456,14 +470,13 @@ export default function PointsScreen() {
 
       {/* Filter/Sort Modal */}
       <Modal visible={showFiltersModal} transparent animationType="slide" statusBarTranslucent onRequestClose={cancelFilters}>
-        <View style={styles.overlay}>
+        <View style={styles.modalOverlay}>
           <View style={styles.filtersModalContent}>
-            <Text style={styles.modalTitle}>Filteri i sortiranje</Text>
             
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* FILTERI */}
               <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>🔍 FILTERI</Text>
+                <Text style={styles.filterSectionTitle}>Filteri</Text>
                 
                 <Text style={styles.label}>Čuvar</Text>
                 <View style={styles.pickerContainer}>
@@ -483,7 +496,7 @@ export default function PointsScreen() {
 
               {/* SORTIRANJE */}
               <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>📊 SORTIRANJE</Text>
+                <Text style={styles.filterSectionTitle}>Sortiranje</Text>
                 
                 <Text style={styles.label}>Redoslijed po datumu</Text>
                 <View style={styles.pickerContainer}>
@@ -512,7 +525,7 @@ export default function PointsScreen() {
                 style={styles.filterApplyButton}
                 onPress={applyFilters}
               >
-                <Text style={styles.filterApplyButtonText}>✓ Primijeni</Text>
+                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -532,7 +545,6 @@ export default function PointsScreen() {
                 onPress={() => { setTempGuardFilter(null); setShowGuardDropdown(false); }}
               >
                 <Text style={styles.dropdownItemText}>Svi čuvari</Text>
-                {tempGuardFilter === null && <Text style={styles.checkmark}>✓</Text>}
               </TouchableOpacity>
               {guards.map((guard) => (
                 <TouchableOpacity
@@ -541,7 +553,6 @@ export default function PointsScreen() {
                   onPress={() => { setTempGuardFilter(guard.id); setShowGuardDropdown(false); }}
                 >
                   <Text style={styles.dropdownItemText}>{guard.full_name || guard.username}</Text>
-                  {tempGuardFilter === guard.id && <Text style={styles.checkmark}>✓</Text>}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -561,14 +572,12 @@ export default function PointsScreen() {
               onPress={() => { setTempSortOrder('desc'); setShowSortDropdown(false); }}
             >
               <Text style={styles.dropdownItemText}>↓ Silazno (najnovije prvo)</Text>
-              {tempSortOrder === 'desc' && <Text style={styles.checkmark}>✓</Text>}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.dropdownItem, tempSortOrder === 'asc' && styles.dropdownItemSelected]}
               onPress={() => { setTempSortOrder('asc'); setShowSortDropdown(false); }}
             >
               <Text style={styles.dropdownItemText}>↑ Uzlazno (najstarije prvo)</Text>
-              {tempSortOrder === 'asc' && <Text style={styles.checkmark}>✓</Text>}
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -578,7 +587,7 @@ export default function PointsScreen() {
       <Modal visible={showCreateModal} transparent animationType="slide" statusBarTranslucent onRequestClose={() => setShowCreateModal(false)}>
         <View style={styles.overlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Dodjeli proizvoljne bodove</Text>
+            <Text style={styles.modalTitle}>Dodijeli proizvoljne bodove</Text>
             
             <ScrollView showsVerticalScrollIndicator={false}>
               <Text style={styles.label}>Čuvar *</Text>
@@ -599,7 +608,7 @@ export default function PointsScreen() {
                 onChangeText={setPointsValue}
                 keyboardType="numeric"
                 placeholder="npr. 2 ili -3"
-                placeholderTextColor="#839958"
+                placeholderTextColor="#A6C27A"
               />
 
               <Text style={styles.label}>Objašnjenje *</Text>
@@ -610,7 +619,9 @@ export default function PointsScreen() {
                 multiline
                 numberOfLines={3}
                 placeholder="Razlog za dodjelu bodova..."
-                placeholderTextColor="#839958"
+                placeholderTextColor="#A6C27A"
+                autoComplete="off"
+                autoCorrect={false}
               />
             </ScrollView>
 
@@ -627,9 +638,9 @@ export default function PointsScreen() {
                 disabled={submitting}
               >
                 {submitting ? (
-                  <ActivityIndicator size="small" color="#839958" />
+                  <ActivityIndicator size="small" color="#A6C27A" />
                 ) : (
-                  <Text style={styles.submitButtonText}>Dodjeli</Text>
+                  <Text style={styles.submitButtonText}>Dodijeli</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -652,7 +663,6 @@ export default function PointsScreen() {
                   onPress={() => { setSelectedGuardId(guard.id); setShowGuardPickerModal(false); }}
                 >
                   <Text style={styles.dropdownItemText}>{guard.full_name || guard.username}</Text>
-                  {selectedGuardId === guard.id && <Text style={styles.checkmark}>✓</Text>}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -699,7 +709,7 @@ export default function PointsScreen() {
                 disabled={lateSubmitting}
               >
                 {lateSubmitting ? (
-                  <ActivityIndicator size="small" color="#839958" />
+                  <ActivityIndicator size="small" color="#A6C27A" />
                 ) : (
                   <Text style={styles.submitButtonText}>Dodijeli kaznu</Text>
                 )}
@@ -724,7 +734,6 @@ export default function PointsScreen() {
                   onPress={() => { setLateGuardId(guard.id); setShowLateGuardPicker(false); }}
                 >
                   <Text style={styles.dropdownItemText}>{guard.full_name || guard.username}</Text>
-                  {lateGuardId === guard.id && <Text style={styles.checkmark}>✓</Text>}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -744,16 +753,13 @@ export default function PointsScreen() {
                 Prioritetni broj računa se svaki ponedjeljak s obzirom na bodove ostvarene u posljednjih X tjedana.
               </Text>
               <Text style={styles.explanationText}>
-                Bodovi koje ostvarujete u trenutnom tjednu u prioritetni broj uračunat će se tek prvi sljedeći ponedjeljak.
+                X je broj poznat kao "vrijeme života bodova" i označava onaj broj tjedana koliko vaši ostvareni bodovi vrijede prije nego se prestanu uzimati u obzir. Taj broj mogu mijenjati administratori.
               </Text>
               <Text style={styles.explanationText}>
-                X je broj poznat kao "vrijeme života bodova" i označava onaj broj tjedana unazad koliko vaši ostvareni bodovi i dalje vrijede. Taj broj mogu mijenjati administratori.
+                Bodovi koje ostvarujete u trenutnom tjednu u prioritetni broj uračunat će se tek prvi sljedeći ponedjeljak i vrijediti od idućeg tjedna pa narednih x tjedana.
               </Text>
               <Text style={styles.explanationText}>
-                Osnovna ideja je da se bodovi postepeno obnavljaju, tako da stariji tjedni iza nas pridonose manje, a mlađi više. Tjedan koji je iza nas najviše pridonosi ukupnom broju, onaj iza njega nešto manje, itd. sve do X + 1 tjedana unazad, kada bodovi više ne vrijede.
-              </Text>
-              <Text style={styles.explanationText}>
-                Čuvar koji danas ima najniži prioritetni broj, nakon X tjedana, može bez ikakve dodatne muke i nadokađivanja zaostataka biti čuvar s najvišim prioritetnim brojem, sustav je pravedan, ali oprašta.
+                Osnovna ideja je da se bodovi postepeno obnavljaju, tako da stariji tjedni iza nas pridonose manje, a noviji više. Tjedan koji je iza nas najviše pridonosi ukupnom broju, onaj iza njega nešto manje, itd. sve do X + 1 tjedana unazad, kada bodovi više ne vrijede.
               </Text>
 
               {/* Formula */}
@@ -762,7 +768,7 @@ export default function PointsScreen() {
                 Efekt posljednjeg tjedna je jednostavno zbroj svih bodova koje ste ostvarili u prošlom tjednu.
               </Text>
               <Text style={styles.explanationText}>
-                Efekt ranijih tjedana dijeli se s varijablinim faktorom kako bi postepeno sve više gubili značaj:
+                Efekt ranijih tjedana dijeli se s varijablinim faktorom kako bi postepeno gubili značaj:
               </Text>
               <Text style={styles.explanationFormula}>
                 faktor = 1 + (0.2 × i)
@@ -792,7 +798,7 @@ export default function PointsScreen() {
               {/* Automatsko upisivanje */}
               <Text style={styles.explanationSectionTitle}>Automatsko upisivanje</Text>
               <Text style={styles.explanationText}>
-                Tijekom automatskog upisivanja vaš se račun "prijavljuje na natječaj" za svaku poziciju koju možete raditi. Budući čuvar upisan na tu poziciju određuje se uz pomoć mađarskog algoritma.
+                Tijekom automatskog upisivanja vaš korisnički račun konkurira za svaku poziciju koju ste u mogućnosti raditi. Budući čuvar upisan na tu poziciju određuje se uz pomoć mađarskog algoritma.
               </Text>
               <Text style={styles.explanationText}>
                 Značaj pojedine prijave na poziciju:
@@ -806,16 +812,16 @@ export default function PointsScreen() {
               {/* Preferencije */}
               <Text style={styles.explanationSectionTitle}>Preferencije</Text>
               <Text style={styles.explanationText}>
-                Ako postavite preferencije za dane ili izložbe, žrtvujete svoje manje preferirane opcije da povećate vjerojatnost upisa na one koje više preferirate.
+                Ako postavite preferencije za dane ili izložbe, žrtvujete svoje manje preferirane opcije da povećate vjerojatnost upisa na one koje više želite.
               </Text>
               <Text style={styles.explanationText}>
-                To znači da ćete u hipotetskoj situaciji, u odnosu na kolegu/kolegicu koji imaju isti prioritetni broj kao vi i nepostavljene preferencije biti u prednosti na dane i izložbe koje vam više odgovaraju ali će oni biti u prednosti na pozicijama koje su vama označene kao manje prioritetne. 
+                To znači da ćete u hipotetskoj situaciji, u odnosu na kolegu/icu koji imaju isti prioritetni broj kao vi i nepostavljene preferencije biti u prednosti na dane i izložbe koje vam više odgovaraju ali će oni biti u prednosti na pozicijama koje su vama označene kao manje prioritetne. 
               </Text>
 
               {/* Zaključak */}
-              <Text style={styles.explanationSectionTitle}>Završna misao autora</Text>
+              <Text style={styles.explanationSectionTitle}>Oprez i odgovornost</Text>
               <Text style={styles.explanationText}>
-                Sustav bodovanja osmišljen je kao pravednija alternativa sustavu "tko prvi njegova/njena pozicija" koji bez obzira na to što podsjeća na divlji zapad, ima svoje pozitivne strane i uvijek je opcija kojoj se možemo vratiti. Jedini smisao bodovanja jest dati prednost upisa čuvarima koji su u posljednjih nekoliko tjedana: više radili, manje kasnili, više uskakali u neplanirane smjene, itd.
+                Sustav bodovanja osmišljen je kao pravednija alternativa sustavu "tko prvi njegova/njena pozicija" koji također ima svoje pozitivne strane i uvijek je opcija kojoj se možemo vratiti. Jedini smisao bodovanja jest dati prednost upisa čuvarima koji su u posljednjih nekoliko tjedana: više radili, manje kasnili, više uskakali u neplanirane smjene, itd.
               </Text>
               <Text style={styles.explanationText}>
                 Sustav je eksperimentalan i smatram da bismo svi trebali biti osjetljivi na eventualne negativne posljedice koje bi mogao imati na dinamiku rada i odnose među čuvarima. Nije zamišljen da potiče kompetitivnost među kolegama i bilo kakve naznake zakinutosti nužno je što prije prijaviti nadređenima.
@@ -847,7 +853,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 10,
-    color: '#839958',
+    color: '#0A3323',
     fontSize: 16,
   },
   listContent: {
@@ -874,13 +880,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   headerButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 13,
     textAlign: 'center',
   },
   filterButton: {
-    backgroundColor: '#839958',
+    backgroundColor: '#0A3323',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 8,
@@ -889,7 +895,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   rulesCard: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -902,16 +908,16 @@ const styles = StyleSheet.create({
   rulesTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 16,
   },
   rulesSection: {
     marginBottom: 12,
   },
   rulesSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#839958',
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#105666',
     marginBottom: 8,
   },
   ruleRow: {
@@ -921,36 +927,34 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   ruleLabel: {
-    fontSize: 13,
-    color: '#839958',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0A3323',
     flex: 1,
   },
-  ruleValuePositive: {
-    fontSize: 13,
+  ruleValue: {
+    fontSize: 15,
     fontWeight: '600',
-    color: '#839958',
-  },
-  ruleValueNegative: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#D3968C',
+    color: '#105666',
   },
   pointsLifeSection: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#0A3323',
   },
   pointsLifeText: {
     fontSize: 14,
-    color: '#839958',
+    fontWeight: '800',
+    color: '#0A3323',
   },
   pointsLifeValue: {
-    fontWeight: '600',
-    color: '#839958',
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#105666',
   },
   prioritySection: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -962,7 +966,7 @@ const styles = StyleSheet.create({
   },
   priorityText: {
     fontSize: 15,
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 12,
   },
   priorityNumber: {
@@ -971,7 +975,7 @@ const styles = StyleSheet.create({
     color: '#105666',
   },
   explanationButton: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
@@ -980,16 +984,17 @@ const styles = StyleSheet.create({
   explanationButtonText: {
     color: '#105666',
     fontWeight: '500',
-    fontSize: 13,
+    fontSize: 14,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
+    marginTop: 8,
     marginBottom: 8,
   },
   pointCard: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1008,17 +1013,17 @@ const styles = StyleSheet.create({
   guardName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     flex: 1,
   },
   pointsBadge: {
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
   },
   pointsBadgePositive: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
   },
   pointsBadgeNegative: {
     backgroundColor: '#D3968C',
@@ -1032,21 +1037,21 @@ const styles = StyleSheet.create({
     color: '#105666',
   },
   pointsTextNegative: {
-    color: '#F7F4D5',
+    color: '#105666',
   },
   explanation: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
   },
   pointFooter: {
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#0A3323',
     paddingTop: 8,
   },
   dateText: {
-    fontSize: 12,
-    color: '#839958',
+    fontSize: 14,
+    color: '#105666',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -1054,7 +1059,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
     fontStyle: 'italic',
   },
   paginationContainer: {
@@ -1065,7 +1070,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: '#F7F4D5',
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
   },
   paginationButton: {
     backgroundColor: '#0A3323',
@@ -1076,10 +1081,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   paginationButtonDisabled: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
   },
   paginationButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -1089,7 +1094,7 @@ const styles = StyleSheet.create({
   pageInfo: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
   overlay: {
     flex: 1,
@@ -1097,6 +1102,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 51, 35, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContent: {
     backgroundColor: '#F7F4D5',
@@ -1107,10 +1118,13 @@ const styles = StyleSheet.create({
   },
   filtersModalContent: {
     backgroundColor: '#F7F4D5',
-    borderRadius: 16,
+    borderRadius: 15,
     padding: 20,
-    width: '100%',
-    maxHeight: '60%',
+    width: '90%',
+    maxWidth: 500,
+    maxHeight: '80%',
+    borderWidth: 1,
+    borderColor: '#A6C27A',
   },
   explanationModalContent: {
     backgroundColor: '#F7F4D5',
@@ -1127,13 +1141,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   filterSection: {
-    marginBottom: 20,
+    marginBottom: 25,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#A6C27A',
   },
   filterSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#839958',
-    marginBottom: 12,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0A3323',
+    marginBottom: 15,
   },
   label: {
     fontSize: 14,
@@ -1146,21 +1163,23 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   picker: {
-    backgroundColor: '#F7F4D5',
-    borderRadius: 8,
-    padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#F7F4D5',
+    borderWidth: 1,
+    borderColor: '#A6C27A',
+    borderRadius: 8,
+    padding: 14,
   },
   pickerText: {
     fontSize: 15,
     color: '#0A3323',
-    flex: 1,
+    fontWeight: '500',
   },
   pickerArrow: {
     fontSize: 12,
-    color: '#839958',
+    color: '#D3968C',
   },
   input: {
     backgroundColor: '#F7F4D5',
@@ -1175,32 +1194,35 @@ const styles = StyleSheet.create({
   },
   filtersModalFooter: {
     flexDirection: 'row',
-    marginTop: 16,
-    gap: 12,
+    marginTop: 15,
+    paddingTop: 20,
+    borderTopWidth: 2,
+    borderTopColor: '#105666',
+    gap: 10,
   },
   filterCancelButton: {
     flex: 1,
-    backgroundColor: '#839958',
-    paddingVertical: 14,
+    backgroundColor: '#D3968C',
+    padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
   filterCancelButtonText: {
-    color: '#105666',
-    fontWeight: '600',
-    fontSize: 16,
+    color: '#0A3323',
+    fontWeight: '700',
+    fontSize: 17,
   },
   filterApplyButton: {
     flex: 1,
     backgroundColor: '#0A3323',
-    paddingVertical: 14,
+    padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
   filterApplyButtonText: {
-    color: '#839958',
-    fontWeight: '600',
-    fontSize: 16,
+    color: '#A6C27A',
+    fontWeight: '700',
+    fontSize: 17,
   },
   modalFooter: {
     flexDirection: 'row',
@@ -1210,7 +1232,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
@@ -1222,7 +1244,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     flex: 1,
-    backgroundColor: '#0A3323',
+    backgroundColor: '#D3968C',
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
@@ -1231,7 +1253,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   submitButtonText: {
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -1245,7 +1267,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   applyButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -1272,28 +1294,23 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   dropdownItemSelected: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
   },
   dropdownItemText: {
     fontSize: 15,
-    color: '#839958',
-  },
-  checkmark: {
-    fontSize: 16,
-    color: '#839958',
-    fontWeight: 'bold',
+    color: '#0A3323',
   },
   lateDescription: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 16,
     lineHeight: 20,
   },
   penaltyInfo: {
-    color: '#839958',
+    color: '#0A3323',
   },
   penaltyValue: {
     fontWeight: 'bold',
@@ -1305,19 +1322,19 @@ const styles = StyleSheet.create({
   explanationSectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#105666',
     marginTop: 16,
     marginBottom: 8,
   },
   explanationText: {
-    fontSize: 14,
-    color: '#839958',
+    fontSize: 15,
+    color: '#105666',
     lineHeight: 21,
     marginBottom: 8,
   },
   explanationNote: {
     fontSize: 13,
-    color: '#839958',
+    color: '#A6C27A',
     fontStyle: 'italic',
     backgroundColor: '#105666',
     padding: 10,
@@ -1328,7 +1345,7 @@ const styles = StyleSheet.create({
   explanationFormula: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#839958',
+    color: '#105666',
     textAlign: 'center',
     backgroundColor: '#F7F4D5',
     paddingVertical: 10,
@@ -1346,14 +1363,14 @@ const styles = StyleSheet.create({
     borderLeftColor: '#105666',
   },
   explanationExampleText: {
-    fontSize: 13,
-    color: '#839958',
+    fontSize: 14,
+    color: '#105666',
     lineHeight: 22,
   },
   explanationExampleResult: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#105666',
     marginTop: 8,
   },
   explanationWarning: {
@@ -1373,7 +1390,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   closeButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 16,
   },

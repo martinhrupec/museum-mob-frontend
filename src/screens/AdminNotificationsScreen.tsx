@@ -9,10 +9,10 @@ import {
   Modal,
   ScrollView,
   TextInput,
-  Alert,
   RefreshControl,
   Platform,
 } from 'react-native';
+import { crossAlert } from '../utils/alert';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   AdminNotification,
@@ -165,7 +165,7 @@ export default function AdminNotificationsScreen() {
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
-      Alert.alert('Greška', 'Nije moguće učitati obavijesti');
+      crossAlert('Greška', 'Nije moguće učitati obavijesti');
     } finally {
       setLoading(false);
     }
@@ -249,19 +249,19 @@ export default function AdminNotificationsScreen() {
     
     if (!formData.title.trim() || !formData.message.trim()) {
       console.log('=== VALIDATION FAILED: title or message empty ===');
-      Alert.alert('Greška', 'Naslov i poruka su obavezni');
+      crossAlert('Greška', 'Naslov i poruka su obavezni');
       return;
     }
 
     if (formData.cast_type === 'unicast' && !formData.to_user_id) {
       console.log('=== VALIDATION FAILED: unicast without user ===');
-      Alert.alert('Greška', 'Molimo odaberite čuvara');
+      crossAlert('Greška', 'Molimo odaberite čuvara');
       return;
     }
 
     if (formData.cast_type === 'multicast' && !formData.notification_date) {
       console.log('=== VALIDATION FAILED: multicast without date ===');
-      Alert.alert('Greška', 'Za multicast obavijest morate odabrati datum');
+      crossAlert('Greška', 'Za multicast obavijest morate odabrati datum');
       return;
     }
 
@@ -274,7 +274,7 @@ export default function AdminNotificationsScreen() {
       console.log('=== Calling createAdminNotification API ===');
       const result = await createAdminNotification(formData);
       console.log('=== CREATE SUCCESS ===', result);
-      Alert.alert('Uspjeh', 'Obavijest je uspješno kreirana');
+      crossAlert('Uspjeh', 'Obavijest je uspješno kreirana');
       setShowCreateModal(false);
       resetForm();
       loadNotifications();
@@ -282,7 +282,7 @@ export default function AdminNotificationsScreen() {
       console.error('=== CREATE ERROR ===');
       console.error('Error creating notification:', error);
       console.error('Error response:', error.response?.data);
-      Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće kreirati obavijest');
+      crossAlert('Greška', error.response?.data?.detail || 'Nije moguće kreirati obavijest');
     } finally {
       console.log('=== setSubmitting(false) in finally ===');
       setSubmitting(false);
@@ -293,28 +293,28 @@ export default function AdminNotificationsScreen() {
     if (!selectedNotification) return;
 
     if (!formData.title.trim() || !formData.message.trim()) {
-      Alert.alert('Greška', 'Naslov i poruka su obavezni');
+      crossAlert('Greška', 'Naslov i poruka su obavezni');
       return;
     }
 
     if (formData.cast_type === 'multicast' && !formData.notification_date) {
-      Alert.alert('Greška', 'Za multicast obavijest morate odabrati datum');
+      crossAlert('Greška', 'Za multicast obavijest morate odabrati datum');
       return;
     }
 
     try {
       await updateAdminNotification(selectedNotification.id, formData);
-      Alert.alert('Uspjeh', 'Obavijest je uspješno ažurirana');
+      crossAlert('Uspjeh', 'Obavijest je uspješno ažurirana');
       setShowEditModal(false);
       loadNotifications();
     } catch (error: any) {
       console.error('Error updating notification:', error);
-      Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće ažurirati obavijest');
+      crossAlert('Greška', error.response?.data?.detail || 'Nije moguće ažurirati obavijest');
     }
   };
 
   const handleDelete = (id: number) => {
-    Alert.alert(
+    crossAlert(
       'Potvrda',
       'Jeste li sigurni da želite obrisati ovu obavijest?',
       [
@@ -325,11 +325,11 @@ export default function AdminNotificationsScreen() {
           onPress: async () => {
             try {
               await deleteAdminNotification(id);
-              Alert.alert('Uspjeh', 'Obavijest je uspješno obrisana');
+              crossAlert('Uspjeh', 'Obavijest je uspješno obrisana');
               loadNotifications();
             } catch (error: any) {
               console.error('Error deleting notification:', error);
-              Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće obrisati obavijest');
+              crossAlert('Greška', error.response?.data?.detail || 'Nije moguće obrisati obavijest');
             }
           },
         },
@@ -441,7 +441,7 @@ export default function AdminNotificationsScreen() {
         <View style={styles.cardMeta}>
           {item.created_by && (
             <Text style={styles.cardMetaText}>
-              Kreirao: {item.created_by.full_name}
+              Kreirao/la: {item.created_by.full_name}
             </Text>
           )}
           
@@ -490,9 +490,9 @@ export default function AdminNotificationsScreen() {
         style={[styles.castOption, formData.cast_type === 'broadcast' && styles.castOptionSelected]}
         onPress={() => setFormData({ ...formData, cast_type: 'broadcast', to_user_id: null, notification_date: null, shift_type: null, exhibition_id: null })}
       >
-        <Text style={styles.castOptionTitle}>📢 Svima</Text>
-        <Text style={styles.castOptionDesc}>
-          Obavijesti koje će svi čuvari vidjeti svaki dan na početnoj stranici tijekom trajanja obavijesti. 
+        <Text style={[styles.castOptionTitle, formData.cast_type === 'broadcast' && styles.castOptionTextSelected]}>📢 Svima</Text>
+        <Text style={[styles.castOptionDesc, formData.cast_type === 'broadcast' && styles.castOptionTextSelected]}>
+          Obavijesti koje će svi čuvari vidjeti svaki dan na početnoj stranici tijekom trajanja obavijesti.
           Namijenjeno samo najbitnijim obavijestima koje ne traju dugo.
         </Text>
       </TouchableOpacity>
@@ -501,8 +501,8 @@ export default function AdminNotificationsScreen() {
         style={[styles.castOption, formData.cast_type === 'unicast' && styles.castOptionSelected]}
         onPress={() => setFormData({ ...formData, cast_type: 'unicast', notification_date: null, shift_type: null, exhibition_id: null })}
       >
-        <Text style={styles.castOptionTitle}>👤 Jednoj osobi</Text>
-        <Text style={styles.castOptionDesc}>
+        <Text style={[styles.castOptionTitle, formData.cast_type === 'unicast' && styles.castOptionTextSelected]}>👤 Jednoj osobi</Text>
+        <Text style={[styles.castOptionDesc, formData.cast_type === 'unicast' && styles.castOptionTextSelected]}>
           Obavijest namijenjena specifičnom čuvaru.
         </Text>
       </TouchableOpacity>
@@ -511,8 +511,8 @@ export default function AdminNotificationsScreen() {
         style={[styles.castOption, formData.cast_type === 'multicast' && styles.castOptionSelected]}
         onPress={() => setFormData({ ...formData, cast_type: 'multicast', to_user_id: null })}
       >
-        <Text style={styles.castOptionTitle}>👥 Nekima</Text>
-        <Text style={styles.castOptionDesc}>
+        <Text style={[styles.castOptionTitle, formData.cast_type === 'multicast' && styles.castOptionTextSelected]}>👥 Nekima</Text>
+        <Text style={[styles.castOptionDesc, formData.cast_type === 'multicast' && styles.castOptionTextSelected]}>
           Obavijest namijenjena čuvarima koji zadovoljavaju određene uvjete (datum, smjena, izložba).
         </Text>
       </TouchableOpacity>
@@ -554,13 +554,10 @@ export default function AdminNotificationsScreen() {
       ) : (
         <>
           <Text style={styles.stepTitle}>Filtriraj primatelje</Text>
-          <Text style={styles.stepHint}>
-            Datum je obavezan. Izložba i smjena su opcionalni filteri.
-          </Text>
           
           <View style={styles.formGroup}>
             <Text style={styles.label}>Datum *</Text>
-            <Text style={styles.helperText}>Odaberite datum za koji želite poslati obavijest.</Text>
+            <Text style={styles.helperText}>Odaberite datum za koji želite poslati obavijest. Ako nije postavljen, obavijest će biti vidljiva sve dane njenog trajanja.</Text>
             {Platform.OS === 'web' ? (
               <input
                 type="date"
@@ -570,9 +567,9 @@ export default function AdminNotificationsScreen() {
                   padding: 14,
                   fontSize: 16,
                   borderRadius: 8,
-                  border: '1px solid #839958',
+                  border: '1px solid #A6C27A',
                   backgroundColor: '#F7F4D5',
-                  color: '#839958',
+                  color: '#0A3323',
                 }}
               />
             ) : (
@@ -700,9 +697,9 @@ export default function AdminNotificationsScreen() {
               padding: 14,
               fontSize: 16,
               borderRadius: 8,
-              border: '1px solid #839958',
+              border: '1px solid #A6C27A',
               backgroundColor: '#F7F4D5',
-              color: '#839958',
+              color: '#0A3323',
             }}
           />
         ) : (
@@ -796,9 +793,9 @@ export default function AdminNotificationsScreen() {
                   padding: 14,
                   fontSize: 16,
                   borderRadius: 8,
-                  border: '1px solid #839958',
+                  border: '1px solid #A6C27A',
                   backgroundColor: '#F7F4D5',
-                  color: '#839958',
+                  color: '#0A3323',
                 }}
               />
             ) : (
@@ -881,9 +878,9 @@ export default function AdminNotificationsScreen() {
               padding: 14,
               fontSize: 16,
               borderRadius: 8,
-              border: '1px solid #839958',
+              border: '1px solid #A6C27A',
               backgroundColor: '#F7F4D5',
-              color: '#839958',
+              color: '#0A3323',
             }}
           />
         ) : (
@@ -1011,14 +1008,12 @@ export default function AdminNotificationsScreen() {
       {/* Filter/Sort Modal */}
       <Modal visible={showFiltersModal} transparent animationType="slide">
         <View style={styles.filterModalOverlay}>
-          <View style={styles.filtersModalContent}>
-            <Text style={styles.modalTitle}>Filteri i sortiranje</Text>
-            
+          <View style={styles.filtersModalContent}>            
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* FILTERI */}
               {isAdmin && (
                 <View style={styles.filterSection}>
-                  <Text style={styles.sectionTitle}>🔍 FILTERI</Text>
+                  <Text style={styles.sectionTitle}>FILTERI</Text>
                   
                   <Text style={styles.label}>Pokazuj</Text>
                   <View style={styles.pickerContainer}>
@@ -1037,7 +1032,7 @@ export default function AdminNotificationsScreen() {
 
               {/* SORTIRANJE */}
               <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>📊 SORTIRANJE</Text>
+                <Text style={styles.sectionTitle}>SORTIRANJE</Text>
                 
                 <Text style={styles.label}>Sortiraj po</Text>
                 <View style={styles.pickerContainer}>
@@ -1079,7 +1074,7 @@ export default function AdminNotificationsScreen() {
                 style={styles.filterApplyButton}
                 onPress={applyFilters}
               >
-                <Text style={styles.filterApplyButtonText}>✓ Primijeni</Text>
+                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1420,18 +1415,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     flex: 1,
   },
   headerButtons: {
@@ -1446,15 +1441,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   createButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 16,
     fontWeight: '600',
   },
   filterIconButton: {
-    backgroundColor: '#F7F4D5',
+    backgroundColor: '#0A3323',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -1467,7 +1462,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   card: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1490,7 +1485,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     flex: 1,
     marginRight: 10,
   },
@@ -1503,7 +1498,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#105666',
   },
   castMulticast: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
+    borderColor: '#0A3323',
+    borderWidth: 1,
   },
   castUnicast: {
     backgroundColor: '#D3968C',
@@ -1514,33 +1511,37 @@ const styles = StyleSheet.create({
     color: '#F7F4D5',
   },
   cardMessage: {
-    fontSize: 14,
-    color: '#839958',
+    fontSize: 16,
+    color: '#0A3323',
     marginBottom: 10,
   },
   cardMeta: {
     marginBottom: 10,
   },
   cardMetaText: {
-    fontSize: 13,
-    color: '#D3968C',
+    fontSize: 12,
+    color: '#105666',
+    fontWeight: '600',
     marginBottom: 2,
   },
   cardFooter: {
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#0A3323',
     paddingTop: 10,
   },
   cardExpiry: {
     fontSize: 12,
-    color: '#839958',
+    color: '#105666',
+    fontWeight: '600',
   },
   cardExpiryExpired: {
-    color: '#D3968C',
+    color: '#105666',
+    fontWeight: '600',
   },
   cardCreated: {
     fontSize: 12,
-    color: '#D3968C',
+    color: '#105666',
+    fontWeight: '600',
     marginTop: 2,
   },
   emptyContainer: {
@@ -1551,7 +1552,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   modalOverlay: {
     flex: 1,
@@ -1566,14 +1567,14 @@ const styles = StyleSheet.create({
     width: '80%',
     maxWidth: 300,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   actionButtonIcon: {
     fontSize: 20,
@@ -1581,7 +1582,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   actionButtonDelete: {
     borderBottomWidth: 0,
@@ -1609,16 +1610,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
   },
   closeButton: {
     fontSize: 24,
-    color: '#839958',
+    color: '#0A3323',
   },
   modalContent: {
     flex: 1,
@@ -1631,7 +1632,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   stepHint: {
     fontSize: 14,
@@ -1640,7 +1641,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   castOption: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1651,15 +1652,18 @@ const styles = StyleSheet.create({
     borderColor: '#105666',
     backgroundColor: '#105666',
   },
+  castOptionTextSelected: {
+    color: '#FFFFFF',
+  },
   castOptionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#839958',
+    color: '#0A3323',
   },
   castOptionDesc: {
-    fontSize: 14,
-    color: '#839958',
+    fontSize: 16,
+    color: '#0A3323',
     lineHeight: 20,
   },
   formGroup: {
@@ -1668,7 +1672,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
   },
   helperText: {
@@ -1679,12 +1683,12 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#0A3323',
-    color: '#839958',
+    backgroundColor: '#F7F4D5',
+    color: '#0A3323',
   },
   textArea: {
     height: 120,
@@ -1692,9 +1696,9 @@ const styles = StyleSheet.create({
   },
   readOnlyText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
     padding: 12,
-    backgroundColor: '#0A3323',
+    backgroundColor: '#F7F4D5',
     borderRadius: 8,
   },
   picker: {
@@ -1702,18 +1706,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
     borderRadius: 8,
     padding: 14,
-    backgroundColor: '#0A3323',
+    backgroundColor: '#F7F4D5',
   },
   pickerText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   pickerArrow: {
     fontSize: 12,
-    color: '#839958',
+    color: '#0A3323',
   },
   clearButton: {
     marginTop: 8,
@@ -1737,10 +1741,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   nextButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1751,10 +1755,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   backButtonText: {
-    color: '#839958',
+    color: '#0A3323',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1767,7 +1771,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   submitButtonFull: {
     marginLeft: 0,
@@ -1775,7 +1779,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   submitButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1796,14 +1800,14 @@ const styles = StyleSheet.create({
     maxWidth: 350,
     maxHeight: '60%',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   dropdownTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
-    color: '#839958',
+    color: '#0A3323',
   },
   dropdownScroll: {
     maxHeight: 300,
@@ -1814,14 +1818,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   dropdownItemActive: {
     backgroundColor: '#105666',
   },
   dropdownItemText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   dropdownItemTextActive: {
     color: '#F7F4D5',
@@ -1838,7 +1842,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: '#F7F4D5',
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
   },
   paginationButton: {
     backgroundColor: '#0A3323',
@@ -1852,7 +1856,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   paginationButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -1862,7 +1866,7 @@ const styles = StyleSheet.create({
   paginationText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
   // Filter Modal styles
   filterModalOverlay: {
@@ -1873,7 +1877,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   filtersModalContent: {
-    backgroundColor: 'white',
+    backgroundColor: '#F7F4D5',
     borderRadius: 15,
     padding: 20,
     width: '100%',
@@ -1886,7 +1890,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 15,
-    color: '#333',
+    color: '#0A3323',
   },
   pickerContainer: {
     marginBottom: 12,
@@ -1895,31 +1899,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 20,
     paddingTop: 20,
-    borderTopWidth: 2,
-    borderTopColor: '#007AFF',
     gap: 10,
   },
   filterCancelButton: {
     flex: 1,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#D3968C',
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
   filterCancelButtonText: {
-    color: '#666',
+    color: '#F7F4D5',
     fontWeight: '700',
     fontSize: 17,
   },
   filterApplyButton: {
     flex: 1,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#105666',
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
   filterApplyButtonText: {
-    color: 'white',
+    color: '#A6C27A',
     fontWeight: '700',
     fontSize: 17,
   },});

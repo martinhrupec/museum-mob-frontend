@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { login, getCurrentUser } from '../api/endpoints';
+import { crossAlert } from '../utils/alert';
 import { useAuthStore } from '../store/authStore';
 
 export default function LoginScreen() {
@@ -16,7 +17,7 @@ export default function LoginScreen() {
     console.log('🔵 Password length:', password.length);
     
     if (!username || !password) {
-      Alert.alert('Greška', 'Unesite korisničko ime i lozinku');
+      crossAlert('Greška', 'Unesite korisničko ime i lozinku');
       return;
     }
 
@@ -53,7 +54,7 @@ export default function LoginScreen() {
         || error.message
         || 'Proverite korisničko ime i lozinku';
       
-      Alert.alert('Greška pri prijavi', errorMessage);
+      crossAlert('Greška pri prijavi', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -69,6 +70,8 @@ export default function LoginScreen() {
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
+        autoComplete="username"
+        autoCorrect={false}
         editable={!isLoading}
       />
       
@@ -79,6 +82,7 @@ export default function LoginScreen() {
         onChangeText={setPassword}
         secureTextEntry
         autoCapitalize="none"
+        autoComplete="current-password"
         autoCorrect={false}
         editable={!isLoading}
       />
@@ -117,7 +121,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#839958', // Moss Green
+    borderColor: '#A6C27A', // Moss Green
     color: '#0A3323', // Dark Green
   },
   button: {
@@ -128,11 +132,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonDisabled: {
-    backgroundColor: '#839958', // Moss Green
+    backgroundColor: '#A6C27A', // Moss Green
     opacity: 0.6,
   },
   buttonText: {
-    color: '#839958', // Moss Green
+    color: '#A6C27A', // Moss Green
     fontSize: 16,
     fontWeight: '600',
   },

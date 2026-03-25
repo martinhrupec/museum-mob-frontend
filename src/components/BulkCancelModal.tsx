@@ -91,42 +91,93 @@ export default function BulkCancelModal({
           {/* Start Date */}
           <View style={styles.dateSection}>
             <Text style={styles.dateLabel}>Od datuma:</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowStartPicker(true)}
-              disabled={loading}
-            >
-              <Text style={styles.dateButtonText}>{formatDateForDisplay(startDate)}</Text>
-            </TouchableOpacity>
-            {showStartPicker && (
-              <DateTimePicker
-                value={startDate}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleStartDateChange}
-                minimumDate={new Date()}
+            {Platform.OS === 'web' ? (
+              <input
+                type="date"
+                value={formatDateForApi(startDate)}
+                min={formatDateForApi(new Date())}
+                onChange={(e) => {
+                  const d = new Date(e.target.value + 'T00:00:00');
+                  if (!isNaN(d.getTime())) {
+                    setStartDate(d);
+                    if (endDate < d) setEndDate(d);
+                  }
+                }}
+                disabled={loading}
+                style={{
+                  padding: 14,
+                  borderRadius: 8,
+                  backgroundColor: '#0A3323',
+                  color: '#A6C27A',
+                  border: 'none',
+                  fontSize: 16,
+                  textAlign: 'center' as const,
+                }}
               />
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowStartPicker(true)}
+                  disabled={loading}
+                >
+                  <Text style={styles.dateButtonText}>{formatDateForDisplay(startDate)}</Text>
+                </TouchableOpacity>
+                {showStartPicker && (
+                  <DateTimePicker
+                    value={startDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleStartDateChange}
+                    minimumDate={new Date()}
+                  />
+                )}
+              </>
             )}
           </View>
 
           {/* End Date */}
           <View style={styles.dateSection}>
             <Text style={styles.dateLabel}>Do datuma:</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowEndPicker(true)}
-              disabled={loading}
-            >
-              <Text style={styles.dateButtonText}>{formatDateForDisplay(endDate)}</Text>
-            </TouchableOpacity>
-            {showEndPicker && (
-              <DateTimePicker
-                value={endDate}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleEndDateChange}
-                minimumDate={startDate}
+            {Platform.OS === 'web' ? (
+              <input
+                type="date"
+                value={formatDateForApi(endDate)}
+                min={formatDateForApi(startDate)}
+                onChange={(e) => {
+                  const d = new Date(e.target.value + 'T00:00:00');
+                  if (!isNaN(d.getTime())) setEndDate(d);
+                }}
+                disabled={loading}
+                style={{
+                  padding: 14,
+                  borderRadius: 8,
+                  backgroundColor: '#0A3323',
+                  color: '#A6C27A',
+                  border: 'none',
+                  fontSize: 16,
+                  textAlign: 'center' as const,
+                }}
               />
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.dateButton}
+                  onPress={() => setShowEndPicker(true)}
+                  disabled={loading}
+                >
+                  <Text style={styles.dateButtonText}>{formatDateForDisplay(endDate)}</Text>
+                </TouchableOpacity>
+                {showEndPicker && (
+                  <DateTimePicker
+                    value={endDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleEndDateChange}
+                    minimumDate={startDate}
+                  />
+                )}
+              </>
             )}
           </View>
 
@@ -184,7 +235,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   title: {
     fontSize: 18,
@@ -195,7 +246,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -215,7 +266,7 @@ const styles = StyleSheet.create({
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#A6C27A',
     textAlign: 'center',
   },
   errorText: {
@@ -234,11 +285,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#839958',
+    color: '#0A3323',
     fontSize: 15,
     fontWeight: '500',
   },
@@ -253,7 +304,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   confirmButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 15,
     fontWeight: '600',
   },

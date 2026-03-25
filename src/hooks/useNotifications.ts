@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { SystemSettings } from '../types';
 import {
@@ -15,6 +16,11 @@ export const useNotifications = (settings: SystemSettings | null) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (Platform.OS === 'web') {
+      setIsLoading(false);
+      return;
+    }
+
     // Setup notifikacija pri mount-u
     const setup = async () => {
       try {
@@ -69,6 +75,8 @@ export const useNotifications = (settings: SystemSettings | null) => {
 
   // Re-schedule notifikacije kad se settings promijene
   useEffect(() => {
+    if (Platform.OS === 'web') return;
+
     const reschedule = async () => {
       if (isEnabled && settings && !isLoading) {
         await schedulePeriodNotifications(settings);

@@ -6,8 +6,7 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   ScrollView,
-  Alert,
-  ActivityIndicator 
+  ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../store/authStore';
@@ -17,7 +16,6 @@ import { usePeriodTimer } from '../hooks/usePeriodTimer';
 
 interface MenuItem {
   label: string;
-  icon: string;
   screenName: string;
   adminOnly?: boolean;
 }
@@ -76,18 +74,18 @@ export default function CustomSideMenu({ visible, onClose }: CustomSideMenuProps
   };
 
   const menuItems: MenuItem[] = [
-    { label: 'Početna', icon: '🏠', screenName: 'Početna' },
-    { label: 'Korisnici', icon: '👥', screenName: 'Korisnici' },
-    { label: 'Izložbe', icon: '🖼️', screenName: 'Izložbe' },
-    { label: 'Bodovi', icon: '⭐', screenName: 'Bodovi' },
-    { label: 'Konfiguracija', icon: '⚙️', screenName: 'Konfiguracija' },
-    { label: 'Povijest upisivanja', icon: '📝', screenName: 'Povijest upisivanja' },
-    { label: 'Prijave recepciji', icon: '📢', screenName: 'Prijave recepciji' },
-    { label: 'Postavke sustava', icon: '🔧', screenName: 'Postavke sustava' },
+    { label: 'Početna', screenName: 'Početna' },
+    { label: 'Korisnici', screenName: 'Korisnici' },
+    { label: 'Izložbe', screenName: 'Izložbe' },
+    { label: 'Bodovi', screenName: 'Bodovi' },
+    { label: 'Konfiguracija', screenName: 'Konfiguracija' },
+    { label: 'Povijest upisivanja', screenName: 'Povijest upisivanja' },
+    { label: 'Prijave recepciji', screenName: 'Prijave recepciji' },
+    { label: 'Postavke sustava', screenName: 'Postavke sustava' },
     
     // Admin only
-    { label: 'Admin obavijesti', icon: '🔔', screenName: 'Administratorske obavijesti', adminOnly: true },
-    { label: 'Povijest promjena', icon: '📊', screenName: 'Povijest promjena sustava', adminOnly: true },
+    { label: 'Admin obavijesti', screenName: 'Administratorske obavijesti', adminOnly: true },
+    { label: 'Povijest promjena', screenName: 'Povijest promjena sustava', adminOnly: true },
   ];
 
   const filteredItems = menuItems.filter(item => !item.adminOnly || isAdmin);
@@ -115,12 +113,22 @@ export default function CustomSideMenu({ visible, onClose }: CustomSideMenuProps
           )}
           <ScrollView style={styles.scrollView} scrollEnabled={!isLoggingOut}>
             {/* User Info */}
-            <View style={[styles.userInfo, { backgroundColor: periodInfo?.color || '#007AFF' }]}>
-              <Text style={styles.userName}>{user?.full_name || user?.username}</Text>
-              <Text style={styles.userRole}>
-                {user?.role === 'admin' ? 'Administrator' : 'Čuvar'}
-              </Text>
-            </View>
+            {(() => {
+              const bg = periodInfo?.color || '#F7F4D5';
+              const textColor = (bg === '#105666' || bg === '#0A3323')
+                ? '#F7F4D5'
+                : bg === '#A6C27A'
+                  ? '#105666'
+                  : '#0A3323';
+              return (
+                <View style={[styles.userInfo, { backgroundColor: bg }]}>
+                  <Text style={[styles.userName, { color: textColor }]}>{user?.full_name || user?.username}</Text>
+                  <Text style={[styles.userRole, { color: textColor }]}>
+                    {user?.role === 'admin' ? 'Administrator' : 'Čuvar'}
+                  </Text>
+                </View>
+              );
+            })()}
 
             {/* Menu Items */}
             {filteredItems.map((item, index) => (
@@ -133,7 +141,6 @@ export default function CustomSideMenu({ visible, onClose }: CustomSideMenuProps
                 }}
                 disabled={isLoggingOut}
               >
-                <Text style={styles.menuIcon}>{item.icon}</Text>
                 <Text style={styles.menuLabel}>{item.label}</Text>
               </TouchableOpacity>
             ))}
@@ -144,7 +151,6 @@ export default function CustomSideMenu({ visible, onClose }: CustomSideMenuProps
               onPress={handleLogout}
               disabled={isLoggingOut}
             >
-              <Text style={styles.menuIcon}>🚪</Text>
               <Text style={[styles.menuLabel, styles.logoutText]}>Odjava</Text>
             </TouchableOpacity>
           </ScrollView>
@@ -208,19 +214,20 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#F7F4D5',
+    color: '#0A3323',
+    marginTop: 10,
     marginBottom: 4,
   },
   userRole: {
     fontSize: 14,
-    color: 'rgba(247, 244, 213, 0.8)',
+    color: '#0A3323',
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   menuIcon: {
     fontSize: 20,
@@ -230,15 +237,16 @@ const styles = StyleSheet.create({
   menuLabel: {
     fontSize: 16,
     color: '#0A3323',
+    fontWeight: '700',
   },
   logoutItem: {
     marginTop: 10,
     borderTopWidth: 2,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
   },
   logoutText: {
-    color: '#D3968C',
-    fontWeight: '600',
+    color: '#0A3323',
+    fontWeight: '700',
   },
   loadingOverlay: {
     position: 'absolute',
@@ -262,7 +270,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   loadingText: {
     marginTop: 15,
@@ -284,7 +292,7 @@ const styles = StyleSheet.create({
     width: '85%',
     maxWidth: 400,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   logoutModalTitle: {
     fontSize: 20,
@@ -295,7 +303,7 @@ const styles = StyleSheet.create({
   },
   logoutModalMessage: {
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 25,
     textAlign: 'center',
     lineHeight: 22,
@@ -312,20 +320,22 @@ const styles = StyleSheet.create({
   },
   logoutCancelButton: {
     backgroundColor: '#F7F4D5',
-    borderWidth: 2,
-    borderColor: '#839958',
+    borderWidth: 1,
+    borderColor: '#0A3323',
   },
   logoutCancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
   logoutConfirmButton: {
-    backgroundColor: '#D3968C',
+    backgroundColor: '#A6C27A',
+    borderWidth: 1,
+    borderColor: '#0A3323',
   },
   logoutConfirmButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#F7F4D5',
+    color: '#0A3323',
   },
 });

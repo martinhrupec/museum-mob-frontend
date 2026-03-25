@@ -25,9 +25,26 @@ const ACTION_LABELS: Record<AuditLogAction, string> = {
   'BULK_DELETE': 'Višestruko brisanje',
 };
 
+// Prijevodi za modele na hrvatski - u genitivu
+const MODEL_LABELS: Record<string, string> = {
+  'Exhibition': 'izložbe',
+  'User': 'korisnika',
+  'Position': 'pozicije',
+  'AdminNotification': 'obavijesti',
+  'Point': 'boda',
+  'PositionHistory': 'akcije na poziciju',
+  'Report': 'prijave recepciji',
+  'NonWorkingDay': 'neradnog dana',
+  'SystemSettings': 'postavki sustava',
+  'Guard': 'čuvara',
+  'GuardWorkPeriod': 'dostupnih radnih perioda',
+  'GuardExhibitionPreference': 'preferencije čuvara za izložbe',
+  'GuardDayPreference': 'preferencije čuvara za dane',
+};
+
 // Stilovi za badge-ove različitih akcija
 const ACTION_STYLES: Record<AuditLogAction, { bg: string; text: string }> = {
-  'CREATE': { bg: '#839958', text: '#F7F4D5' },
+  'CREATE': { bg: '#A6C27A', text: '#F7F4D5' },
   'UPDATE': { bg: '#105666', text: '#F7F4D5' },
   'DELETE': { bg: '#D3968C', text: '#0A3323' },
   'BULK_UPDATE': { bg: '#105666', text: '#F7F4D5' },
@@ -308,6 +325,13 @@ export default function SystemChangesHistoryScreen() {
     return actionFilter !== null || userFilter !== null || yearFilter !== null || monthFilter !== null || dayFilter !== null;
   };
 
+  // Kombinira akciju i model u hrvatski genitivni oblik (npr. "Brisanje korisnika")
+  const getCombinedActionLabel = (action: AuditLogAction, modelName: string): string => {
+    const actionLabel = ACTION_LABELS[action] || action;
+    const modelLabel = MODEL_LABELS[modelName] || modelName.toLowerCase();
+    return `${actionLabel} ${modelLabel}`;
+  };
+
   const renderAuditLogItem = ({ item }: { item: AuditLog }) => {
     const actionStyle = ACTION_STYLES[item.action] || { bg: '#e2e3e5', text: '#383d41' };
     const changesStr = formatChanges(item.changes);
@@ -317,10 +341,9 @@ export default function SystemChangesHistoryScreen() {
         <View style={styles.logHeader}>
           <View style={[styles.actionBadge, { backgroundColor: actionStyle.bg }]}>
             <Text style={[styles.actionBadgeText, { color: actionStyle.text }]}>
-              {ACTION_LABELS[item.action] || item.action_display}
+              {getCombinedActionLabel(item.action, item.model_name)}
             </Text>
           </View>
-          <Text style={styles.modelName}>{item.model_name}</Text>
         </View>
 
         <View style={styles.logContent}>
@@ -339,7 +362,7 @@ export default function SystemChangesHistoryScreen() {
             👤 {item.user_full_name || item.user_name || 'Nepoznato'}
           </Text>
           <Text style={styles.timestamp}>
-            🕐 {formatTimestamp(item.timestamp)}
+            {formatTimestamp(item.timestamp)}
           </Text>
         </View>
       </View>
@@ -430,13 +453,11 @@ export default function SystemChangesHistoryScreen() {
       {/* Filter/Sort Modal */}
       <Modal visible={showFiltersModal} transparent animationType="slide">
         <View style={styles.overlay}>
-          <View style={styles.filtersModalContent}>
-            <Text style={styles.modalTitle}>Filteri i sortiranje</Text>
-            
+          <View style={styles.filtersModalContent}>            
             <ScrollView showsVerticalScrollIndicator={false} style={styles.filtersScroll}>
               {/* FILTERI */}
               <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>🔍 FILTERI</Text>
+                <Text style={styles.filterSectionTitle}>FILTERI</Text>
                 
                 {/* Korisnik */}
                 <Text style={styles.label}>Korisnik</Text>
@@ -511,7 +532,7 @@ export default function SystemChangesHistoryScreen() {
 
               {/* SORTIRANJE */}
               <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>📊 SORTIRANJE</Text>
+                <Text style={styles.filterSectionTitle}>SORTIRANJE</Text>
                 
                 <Text style={styles.label}>Redoslijed po vremenu</Text>
                 <View style={styles.pickerContainer}>
@@ -546,7 +567,7 @@ export default function SystemChangesHistoryScreen() {
                 style={styles.filterApplyButton}
                 onPress={applyFilters}
               >
-                <Text style={styles.filterApplyButtonText}>✓ Primijeni</Text>
+                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -718,7 +739,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#839958',
+    color: '#0A3323',
   },
   errorText: {
     fontSize: 16,
@@ -739,7 +760,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
   },
   filterButton: {
     backgroundColor: '#0A3323',
@@ -751,17 +772,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#105666',
   },
   filterButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 14,
     fontWeight: '600',
   },
   countText: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
   },
   logCard: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -771,7 +792,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
   },
   logHeader: {
     flexDirection: 'row',
@@ -790,7 +811,7 @@ const styles = StyleSheet.create({
   },
   modelName: {
     fontSize: 14,
-    color: '#D3968C',
+    color: '#105666',
     fontStyle: 'italic',
   },
   logContent: {
@@ -798,7 +819,7 @@ const styles = StyleSheet.create({
   },
   objectRepr: {
     fontSize: 15,
-    color: '#839958',
+    color: '#0A3323',
     lineHeight: 22,
   },
   changesContainer: {
@@ -811,7 +832,7 @@ const styles = StyleSheet.create({
   },
   changesLabel: {
     fontSize: 12,
-    color: '#839958',
+    color: '#0A3323',
     fontWeight: '600',
     marginBottom: 4,
   },
@@ -826,15 +847,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#0A3323',
   },
   userInfo: {
     fontSize: 13,
-    color: '#D3968C',
+    color: '#105666',
+    fontWeight: '600',
   },
   timestamp: {
     fontSize: 13,
-    color: '#D3968C',
+    color: '#105666',
+    fontWeight: '600',
   },
   emptyContainer: {
     padding: 40,
@@ -862,7 +885,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   paginationButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -871,7 +894,7 @@ const styles = StyleSheet.create({
   },
   pageInfo: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
   },
   overlay: {
     flex: 1,
@@ -886,7 +909,7 @@ const styles = StyleSheet.create({
     width: '90%',
     maxHeight: '80%',
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   modalTitle: {
     fontSize: 20,
@@ -909,7 +932,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 6,
     fontWeight: '500',
   },
@@ -920,7 +943,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F4D5',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -932,7 +955,7 @@ const styles = StyleSheet.create({
   },
   pickerArrow: {
     fontSize: 12,
-    color: '#839958',
+    color: '#0A3323',
   },
   filtersModalFooter: {
     flexDirection: 'row',
@@ -941,7 +964,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
   },
   resetButton: {
     paddingHorizontal: 16,
@@ -975,7 +998,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   filterApplyButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -997,7 +1020,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   dropdownScroll: {
     maxHeight: 330,
@@ -1008,7 +1031,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   dropdownItemSelected: {
     backgroundColor: '#0A3323',

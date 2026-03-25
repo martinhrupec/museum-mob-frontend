@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   title: {
     fontSize: 18,
@@ -147,14 +147,14 @@ const styles = StyleSheet.create({
   },
   positionInfo: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 20,
   },
   description: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     textAlign: 'center',
     marginBottom: 20,
     lineHeight: 20,
@@ -178,12 +178,12 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 8,
     fontSize: 16,
-    color: '#839958',
+    color: '#A6C27A',
   },
   inputSuffix: {
     marginLeft: 12,
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
   },
   warningContainer: {
     backgroundColor: '#D3968C',
@@ -205,11 +205,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     alignItems: 'center',
   },
   cancelButtonText: {
-    color: '#839958',
+    color: '#0A3323',
     fontSize: 15,
     fontWeight: '500',
   },
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   confirmButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 15,
     fontWeight: '600',
   },

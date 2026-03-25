@@ -155,7 +155,7 @@ export const usePeriodTimer = (settings: SystemSettings | null) => {
         return {
           type: 'grace',
           label: 'Fer period traje još:',
-          color: '#839958', // Moss Green
+          color: '#A6C27A', // Moss Green
           timeRemaining: endDate.getTime() - now.getTime(),
         };
       }

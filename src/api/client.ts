@@ -16,7 +16,7 @@ const apiClient = axios.create({
     },
 })
 
-// Request interceptor - dodaje JWT token u svaki zahtev
+// Request interceptor - dodaje JWT token u svaki zahtjev
 apiClient.interceptors.request.use(
     async (config) => {
         console.log('📤 Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''));

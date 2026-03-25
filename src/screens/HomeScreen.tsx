@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { crossAlert } from '../utils/alert';
 import { useAuthStore } from '../store/authStore';
 import {
   getCurrentSystemSettings,
@@ -158,8 +159,9 @@ export default function HomeScreen() {
     
     setAdminNotificationsLoading(true);
     try {
-      const data = await getAdminNotifications();
-      setAdminNotifications(data);
+      const data = await getAdminNotifications(1, { active: true });
+      // Handle paginated response - data is an object with results array
+      setAdminNotifications(data.results || []);
     } catch (error) {
       console.error('Error fetching admin notifications:', error);
       setAdminNotifications([]);
@@ -188,7 +190,7 @@ export default function HomeScreen() {
   const handleCancelMySwapRequest = async () => {
     if (!myActiveSwapRequest) return;
     
-    Alert.alert(
+    crossAlert(
       'Poništi zahtjev',
       'Jeste li sigurni da želite poništiti svoj zahtjev za zamjenu?',
       [
@@ -201,11 +203,11 @@ export default function HomeScreen() {
               setCancellingSwapRequest(true);
               await deleteSwapRequest(myActiveSwapRequest.id);
               setMyActiveSwapRequest(null);
-              Alert.alert('Uspjeh', 'Zahtjev za zamjenu je poništen');
+              crossAlert('Uspjeh', 'Zahtjev za zamjenu je poništen');
               fetchSnapshot();
             } catch (error: any) {
               console.error('Error cancelling swap request:', error);
-              Alert.alert('Greška', error.response?.data?.detail || 'Nije moguće poništiti zahtjev');
+              crossAlert('Greška', error.response?.data?.detail || 'Nije moguće poništiti zahtjev');
             } finally {
               setCancellingSwapRequest(false);
             }
@@ -218,7 +220,7 @@ export default function HomeScreen() {
   const handleAcceptSwap = async (swapRequestId: number, positionOfferedId: number) => {
     try {
       const response = await acceptSwapRequest(swapRequestId, positionOfferedId);
-      Alert.alert('Uspjeh', response.message || 'Zamjena je uspješno prihvaćena!');
+      crossAlert('Uspjeh', response.message || 'Zamjena je uspješno prihvaćena!');
       
       // Refresh sve podatke
       await Promise.all([
@@ -227,7 +229,7 @@ export default function HomeScreen() {
       ]);
     } catch (error: any) {
       console.error('Accept swap error:', error);
-      Alert.alert(
+      crossAlert(
         'Greška',
         error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške pri prihvaćanju zamjene.'
       );
@@ -336,14 +338,14 @@ export default function HomeScreen() {
       setConfirmModalVisible(false);
       setPendingAction(null);
       
-      Alert.alert('Uspjeh', message);
+      crossAlert('Uspjeh', message);
       
       // Refresh podataka
       await fetchSnapshot();
       
     } catch (error: any) {
       console.error('Action error:', error);
-      Alert.alert(
+      crossAlert(
         'Greška',
         error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške. Pokušaj ponovo.'
       );
@@ -365,7 +367,7 @@ export default function HomeScreen() {
         ? response.penalty_applied.points 
         : parseFloat(response.penalty_applied.points as any);
       
-      Alert.alert(
+      crossAlert(
         'Kašnjenje prijavljeno',
         `${response.message}\n\nKazna: ${penaltyPoints} bodova\n${response.penalty_applied.explanation}`
       );
@@ -374,7 +376,7 @@ export default function HomeScreen() {
       
     } catch (error: any) {
       console.error('Report lateness error:', error);
-      Alert.alert(
+      crossAlert(
         'Greška',
         error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške pri prijavi kašnjenja.'
       );
@@ -395,21 +397,21 @@ export default function HomeScreen() {
           ? response.penalty_applied
           : (parseFloat(String(response.penalty_applied)) || 0);
         
-        Alert.alert(
+        crossAlert(
           'Smjene otkazane',
           penalty > 0 
             ? `${response.message}\n\nKazna: ${penalty} bodova`
             : response.message
         );
       } else {
-        Alert.alert('Info', 'Nema smjena za otkazati u odabranom periodu.');
+        crossAlert('Info', 'Nema smjena za otkazati u odabranom periodu.');
       }
       
       await fetchSnapshot();
       
     } catch (error: any) {
       console.error('Bulk cancel error:', error);
-      Alert.alert(
+      crossAlert(
         'Greška',
         error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške pri otkazivanju smjena.'
       );
@@ -439,28 +441,28 @@ export default function HomeScreen() {
           title: 'Potvrdi upis',
           message: `Želiš li se upisati na poziciju:\n${positionInfo}?`,
           confirmText: 'Upiši se',
-          confirmColor: '#4caf50',
+          confirmColor: '#A6C27A',
         };
       case 'unassign':
         return {
           title: 'Potvrdi ispis',
           message: `Želiš li se ispisati s pozicije:\n${positionInfo}?`,
           confirmText: 'Ispiši se',
-          confirmColor: '#f44336',
+          confirmColor: '#D3968C',
         };
       case 'cancel':
         return {
           title: 'Potvrdi otkazivanje',
           message: `Želiš li otkazati poziciju:\n${positionInfo}?\n\nOva akcija može rezultirati kaznenim bodovima.`,
           confirmText: 'Otkaži',
-          confirmColor: '#f44336',
+          confirmColor: '#D3968C',
         };
       case 'request_swap':
         return {
           title: 'Zatraži zamjenu',
           message: `Želiš li zatražiti zamjenu za poziciju:\n${positionInfo}?\n\nDrugi čuvari će moći prihvatiti tvoj zahtjev.`,
           confirmText: 'Zatraži',
-          confirmColor: '#ff9800',
+          confirmColor: '#105666',
         };
       default:
         return { title: '', message: '', confirmText: '', confirmColor: '' };
@@ -513,7 +515,7 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Username hint */}
         {user && (
-          <Text style={styles.usernameHint}>👤 👉 {user.username}</Text>
+          <Text style={styles.usernameHint}>👤 {user.username}</Text>
         )}
 
         {/* Period countdown */}
@@ -579,10 +581,10 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.mySwapRequestBody}>
                   <Text style={styles.mySwapRequestInfo}>
-                    {myActiveSwapRequest.position?.exhibition_name || 'Izložba'}
+                    {myActiveSwapRequest.position_to_swap_details?.exhibition_name || 'Izložba'}
                   </Text>
                   <Text style={styles.mySwapRequestDate}>
-                    📅 {myActiveSwapRequest.position?.date || ''} • {myActiveSwapRequest.position?.start_time?.slice(0, 5) || ''} - {myActiveSwapRequest.position?.end_time?.slice(0, 5) || ''}
+                    {myActiveSwapRequest.position_to_swap_details?.date || ''} • {myActiveSwapRequest.position_to_swap_details?.start_time?.slice(0, 5) || ''} - {myActiveSwapRequest.position_to_swap_details?.end_time?.slice(0, 5) || ''}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -591,7 +593,7 @@ export default function HomeScreen() {
                   disabled={cancellingSwapRequest}
                 >
                   {cancellingSwapRequest ? (
-                    <ActivityIndicator size="small" color="#839958" />
+                    <ActivityIndicator size="small" color="#A6C27A" />
                   ) : (
                     <Text style={styles.cancelSwapButtonText}>Poništi</Text>
                   )}
@@ -685,7 +687,7 @@ export default function HomeScreen() {
                           
                           {/* Jutarnje smjene */}
                           <View style={styles.shiftSection}>
-                            <Text style={styles.shiftLabel}>Jutro</Text>
+                            <Text style={styles.shiftLabel}>JUTRO</Text>
                             {morning.length > 0 && sortPositions(morning).map(pos => (
                               <TouchableOpacity
                                 key={pos.position.id}
@@ -694,7 +696,7 @@ export default function HomeScreen() {
                               >
                                 <Text style={styles.positionExhibition}>{pos.position.exhibition_name}</Text>
                                 <Text style={styles.positionGuard}>
-                                  {pos.guard ? pos.guard.full_name : '[Prazno]'}
+                                  {pos.guard ? pos.guard.username : ''}
                                 </Text>
                               </TouchableOpacity>
                             ))}
@@ -702,7 +704,7 @@ export default function HomeScreen() {
 
                           {/* Popodnevne smjene */}
                           <View style={styles.shiftSection}>
-                            <Text style={styles.shiftLabel}>Popodne</Text>
+                            <Text style={styles.shiftLabel}>POPODNE</Text>
                             {afternoon.length > 0 && sortPositions(afternoon).map(pos => (
                               <TouchableOpacity
                                 key={pos.position.id}
@@ -711,7 +713,7 @@ export default function HomeScreen() {
                               >
                                 <Text style={styles.positionExhibition}>{pos.position.exhibition_name}</Text>
                                 <Text style={styles.positionGuard}>
-                                  {pos.guard ? pos.guard.full_name : '[Prazno]'}
+                                  {pos.guard ? pos.guard.username : ''}
                                 </Text>
                               </TouchableOpacity>
                             ))}
@@ -823,7 +825,7 @@ const styles = StyleSheet.create({
   },
   usernameHint: {
     fontSize: 14,
-    color: '#839958',
+    color: '#105666',
     marginBottom: 15,
     textAlign: 'right',
     fontStyle: 'italic',
@@ -834,7 +836,7 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     textAlign: 'center',
     marginTop: 20,
     fontStyle: 'italic',
@@ -843,7 +845,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     fontSize: 13,
-    color: '#839958',
+    color: '#0A3323',
     fontStyle: 'italic',
   },
   swapRequestsSection: {
@@ -853,7 +855,7 @@ const styles = StyleSheet.create({
   swapRequestsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#D3968C',
+    color: '#105666',
     marginBottom: 12,
   },
   weekToggleContainer: {
@@ -869,7 +871,7 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     padding: 12,
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -878,7 +880,7 @@ const styles = StyleSheet.create({
   },
   refreshButtonText: {
     fontSize: 20,
-    color: '#839958',
+    color: '#0A3323',
   },
   toggleButton: {
     flex: 1,
@@ -886,25 +888,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F4D5',
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     alignItems: 'center',
   },
   toggleButtonActive: {
-    backgroundColor: '#0A3323',
-    borderColor: '#0A3323',
+    backgroundColor: '#A6C27A',
+    borderColor: '#A6C27A',
   },
   toggleText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
   toggleTextActive: {
-    color: '#839958',
+    color: '#0A3323',
   },
   weekRange: {
     textAlign: 'center',
     fontSize: 13,
-    color: '#839958',
+    color: '#0A3323',
     marginTop: 12,
     marginBottom: 8,
   },
@@ -916,7 +918,7 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     width: '48%',
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
@@ -929,7 +931,7 @@ const styles = StyleSheet.create({
   dayHeader: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -937,32 +939,31 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   shiftLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#D3968C',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0A3323',
     marginBottom: 4,
   },
   positionItem: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
     padding: 8,
     borderRadius: 4,
     marginBottom: 4,
-    borderLeftWidth: 3,
-    borderLeftColor: '#105666',
   },
   positionEmpty: {
-    backgroundColor: '#D3968C',
-    borderLeftColor: '#F7F4D5',
+    backgroundColor: '#F7F4D5',
+    borderLeftColor: '#105666',
   },
   positionExhibition: {
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#105666',
+    color: '#0A3323',
   },
   positionGuard: {
-    fontSize: 9,
-    color: '#0A3323',
+    fontSize: 14,
+    color: '#105666',
     marginTop: 2,
+    fontWeight: '600',
   },
   specialEventsSection: {
     marginTop: 16,
@@ -985,10 +986,10 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
     borderWidth: 2,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   specialEventItem: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
     padding: 8,
     borderRadius: 4,
     marginBottom: 4,
@@ -996,7 +997,7 @@ const styles = StyleSheet.create({
     borderLeftColor: '#105666',
   },
   specialEventDate: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
     color: '#105666',
   },
@@ -1016,7 +1017,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   adminNotificationCard: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
@@ -1037,7 +1038,7 @@ const styles = StyleSheet.create({
   adminNotificationTitle: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     flex: 1,
     marginRight: 8,
   },
@@ -1060,13 +1061,13 @@ const styles = StyleSheet.create({
   },
   adminNotificationMessage: {
     fontSize: 14,
-    color: '#F7F4D5',
+    color: '#0A3323',
     lineHeight: 20,
     marginBottom: 8,
   },
   adminNotificationMeta: {
     fontSize: 12,
-    color: '#D3968C',
+    color: '#105666',
     fontStyle: 'italic',
   },
   // My swap request styles
@@ -1097,15 +1098,15 @@ const styles = StyleSheet.create({
   mySwapRequestInfo: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#F7F4D5',
+    color: '#0A3323',
     marginBottom: 4,
   },
   mySwapRequestDate: {
     fontSize: 13,
-    color: '#F7F4D5',
+    color: '#0A3323',
   },
   cancelSwapButton: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#105666',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -1113,12 +1114,12 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   cancelSwapButtonText: {
-    color: '#839958',
+    color: '#F7F4D5',
     fontWeight: '600',
     fontSize: 14,
   },
   noSwapRequestsText: {
-    color: '#839958',
+    color: '#0A3323',
     fontStyle: 'italic',
     textAlign: 'center',
     padding: 10,

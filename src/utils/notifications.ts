@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import { Platform, Alert } from 'react-native';
+import { Platform } from 'react-native';
+import { crossAlert } from './alert';
 import { SystemSettings } from '../types';
 
 // Konfiguracija kako će se notifikacije prikazivati kada je app u foreground
@@ -32,23 +33,23 @@ export async function registerForPushNotificationsAsync(): Promise<boolean> {
   if (Device.isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    
+
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
-    
+
     if (finalStatus !== 'granted') {
-      Alert.alert(
+      crossAlert(
         'Notifikacije onemogućene',
         'Molimo omogućite notifikacije u postavkama uređaja kako biste primali obavijesti o rokovima.'
       );
       return false;
     }
-    
+
     return true;
   } else {
-    Alert.alert('Info', 'Notifikacije rade samo na fizičkom uređaju');
+    crossAlert('Info', 'Notifikacije rade samo na fizičkom uređaju');
     return false;
   }
 }
@@ -64,10 +65,10 @@ function getDateForPeriodStart(
   const weekStart = new Date(currentWeekStart);
   const target = new Date(weekStart);
   target.setDate(weekStart.getDate() + day);
-  
+
   const [h, m, s] = timeStr.split(':').map(Number);
   target.setHours(h, m, s || 0, 0);
-  
+
   return target;
 }
 

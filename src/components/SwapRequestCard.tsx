@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
     marginTop: 2,
   },
   legend: {
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   legendItem: {
     flexDirection: 'row',
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-    color: '#839958',
+    color: '#0A3323',
   },
   gridContainer: {
     flexDirection: 'row',
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   offerableBox: {
-    backgroundColor: '#839958',
+    backgroundColor: '#A6C27A',
   },
   selectedBox: {
     backgroundColor: '#105666',
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   offerLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginTop: 12,
     marginBottom: 8,
   },
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   acceptButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 14,
   },

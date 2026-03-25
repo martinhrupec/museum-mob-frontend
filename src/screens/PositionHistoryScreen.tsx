@@ -8,10 +8,10 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
-  Alert,
   TextInput,
   Platform,
 } from 'react-native';
+import { crossAlert } from '../utils/alert';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuthStore } from '../store/authStore';
@@ -202,13 +202,13 @@ export default function PositionHistoryScreen() {
   
   const handleCreatePosition = async () => {
     if (!createPosExhibitionId) {
-      Alert.alert('Greška', 'Morate odabrati izložbu.');
+      crossAlert('Greška', 'Morate odabrati izložbu.');
       return;
     }
     
     const selectedExhibition = getSelectedExhibition();
     if (!selectedExhibition) {
-      Alert.alert('Greška', 'Odabrana izložba nije pronađena.');
+      crossAlert('Greška', 'Odabrana izložba nije pronađena.');
       return;
     }
     
@@ -218,7 +218,7 @@ export default function PositionHistoryScreen() {
     if (selectedExhibition.is_special_event) {
       // Special event: use manual time inputs
       if (!createPosTimeStart || !createPosTimeEnd) {
-        Alert.alert('Greška', 'Morate unijeti vrijeme početka i završetka.');
+        crossAlert('Greška', 'Morate unijeti vrijeme početka i završetka.');
         return;
       }
       startTime = createPosTimeStart;
@@ -226,7 +226,7 @@ export default function PositionHistoryScreen() {
     } else {
       // Regular exhibition: use shift and system settings
       if (!settings) {
-        Alert.alert('Greška', 'Sistemske postavke nisu učitane.');
+        crossAlert('Greška', 'Sistemske postavke nisu učitane.');
         return;
       }
       
@@ -255,7 +255,7 @@ export default function PositionHistoryScreen() {
         end_time: endTime,
       });
       
-      Alert.alert('Uspjeh', 'Pozicija je uspješno kreirana.');
+      crossAlert('Uspjeh', 'Pozicija je uspješno kreirana.');
       setCreatePositionModalVisible(false);
       resetCreatePositionForm();
       
@@ -265,7 +265,7 @@ export default function PositionHistoryScreen() {
       }
     } catch (error: any) {
       console.error('Error creating position:', error);
-      Alert.alert(
+      crossAlert(
         'Greška',
         error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške pri kreiranju pozicije.'
       );
@@ -275,7 +275,7 @@ export default function PositionHistoryScreen() {
   };
   
   const handleDeletePosition = (positionId: number) => {
-    Alert.alert(
+    crossAlert(
       'Potvrda',
       'Jeste li sigurni da želite obrisati ovu poziciju?',
       [
@@ -287,7 +287,7 @@ export default function PositionHistoryScreen() {
             try {
               setDeletingPositionId(positionId);
               await deletePosition(positionId);
-              Alert.alert('Uspjeh', 'Pozicija je uspješno obrisana.');
+              crossAlert('Uspjeh', 'Pozicija je uspješno obrisana.');
               
               // Refresh snapshot
               if (mode === 'results') {
@@ -295,7 +295,7 @@ export default function PositionHistoryScreen() {
               }
             } catch (error: any) {
               console.error('Error deleting position:', error);
-              Alert.alert(
+              crossAlert(
                 'Greška',
                 error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške pri brisanju pozicije.'
               );
@@ -327,7 +327,7 @@ export default function PositionHistoryScreen() {
       setMode('results');
     } catch (error: any) {
       console.error('Error fetching snapshot:', error);
-      Alert.alert(
+      crossAlert(
         'Greška',
         error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške pri dohvaćanju podataka.'
       );
@@ -344,7 +344,7 @@ export default function PositionHistoryScreen() {
       setEarningsData(data);
     } catch (error: any) {
       console.error('Error fetching work history:', error);
-      Alert.alert(
+      crossAlert(
         'Greška',
         error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške pri dohvaćanju podataka.'
       );
@@ -365,7 +365,7 @@ export default function PositionHistoryScreen() {
       setAdminEarningsStep('results');
     } catch (error: any) {
       console.error('Error fetching admin earnings:', error);
-      Alert.alert(
+      crossAlert(
         'Greška',
         error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške pri dohvaćanju podataka.'
       );
@@ -394,14 +394,14 @@ export default function PositionHistoryScreen() {
       
       if (action === 'ASSIGNED') {
         if (!selectedGuardForAssign) {
-          Alert.alert('Greška', 'Morate odabrati čuvara.');
+          crossAlert('Greška', 'Morate odabrati čuvara.');
           return;
         }
         guardId = selectedGuardForAssign;
       } else {
         // CANCELED - uzmi čuvara s pozicije
         if (!selectedPosition.guard) {
-          Alert.alert('Greška', 'Pozicija nema dodijeljenog čuvara za otkazivanje.');
+          crossAlert('Greška', 'Pozicija nema dodijeljenog čuvara za otkazivanje.');
           return;
         }
         guardId = selectedPosition.guard.id;
@@ -415,7 +415,7 @@ export default function PositionHistoryScreen() {
       
       setPositionActionModalVisible(false);
       
-      Alert.alert(
+      crossAlert(
         'Uspjeh',
         action === 'ASSIGNED' 
           ? 'Čuvar je uspješno upisan na poziciju.'
@@ -427,7 +427,7 @@ export default function PositionHistoryScreen() {
       
     } catch (error: any) {
       console.error('Position action error:', error);
-      Alert.alert(
+      crossAlert(
         'Greška',
         error.response?.data?.error || error.response?.data?.detail || 'Došlo je do greške.'
       );
@@ -457,7 +457,7 @@ export default function PositionHistoryScreen() {
             style={styles.picker}
           >
             {MONTHS.map((m) => (
-              <Picker.Item key={m.value} label={m.label} value={m.value} color="#839958" />
+              <Picker.Item key={m.value} label={m.label} value={m.value} color="#0A3323" />
             ))}
           </Picker>
         </View>
@@ -473,7 +473,7 @@ export default function PositionHistoryScreen() {
             style={styles.picker}
           >
             {YEARS.map((y) => (
-              <Picker.Item key={y.value} label={y.label} value={y.value} color="#839958" />
+              <Picker.Item key={y.value} label={y.label} value={y.value} color="#0A3323" />
             ))}
           </Picker>
         </View>
@@ -490,13 +490,13 @@ export default function PositionHistoryScreen() {
               style={styles.picker}
               enabled={!guardsLoading}
             >
-              <Picker.Item label="Svi čuvari" value="all" color="#839958" />
+              <Picker.Item label="Svi čuvari" value="all" color="#0A3323" />
               {guards.map((g) => (
                 <Picker.Item 
                   key={g.id} 
                   label={g.full_name || g.username || `Guard ${g.id}`} 
                   value={g.id}
-                  color="#839958"
+                  color="#0A3323"
                 />
               ))}
             </Picker>
@@ -506,8 +506,8 @@ export default function PositionHistoryScreen() {
               onValueChange={(value) => setGuardFilter(value)}
               style={styles.picker}
             >
-              <Picker.Item label="Svi čuvari" value="all" color="#839958" />
-              <Picker.Item label="Samo ja" value="me" color="#839958" />
+              <Picker.Item label="Svi čuvari" value="all" color="#0A3323" />
+              <Picker.Item label="Samo ja" value="me" color="#0A3323" />
             </Picker>
           )}
         </View>
@@ -520,7 +520,7 @@ export default function PositionHistoryScreen() {
         disabled={snapshotLoading || settingsLoading}
       >
         {snapshotLoading ? (
-          <ActivityIndicator color="#839958" />
+          <ActivityIndicator color="#A6C27A" />
         ) : (
           <Text style={styles.confirmButtonText}>Potvrdi</Text>
         )}
@@ -604,7 +604,7 @@ export default function PositionHistoryScreen() {
                   setAdminEarningsModalVisible(true);
                 }}
               >
-                <Text style={styles.actionButtonText}>📊 Mjesečni presjek isplata</Text>
+                <Text style={styles.actionButtonText}>Mjesečni presjek isplata</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -614,7 +614,7 @@ export default function PositionHistoryScreen() {
                   setCreatePositionModalVisible(true);
                 }}
               >
-                <Text style={styles.actionButtonText}>➕ Kreiraj poziciju</Text>
+                <Text style={styles.actionButtonText}>Kreiraj poziciju</Text>
               </TouchableOpacity>
             </>
           )}
@@ -647,7 +647,7 @@ export default function PositionHistoryScreen() {
                   {/* Jutarnje smjene */}
                   {morning.length > 0 && (
                     <View style={styles.shiftSection}>
-                      <Text style={styles.shiftLabel}>Jutro</Text>
+                      <Text style={styles.shiftLabel}>JUTRO</Text>
                       {sortPositions(morning as any).map(pos => {
                         const originalPos = originalPositionsMap.get(pos.position.id);
                         return (
@@ -668,7 +668,7 @@ export default function PositionHistoryScreen() {
                                   {pos.position.start_time.substring(0, 5)} - {pos.position.end_time.substring(0, 5)}
                                 </Text>
                                 <Text style={styles.positionGuard}>
-                                  {pos.guard ? pos.guard.full_name : '[Prazno]'}
+                                  {pos.guard ? pos.guard.username : ''}
                                 </Text>
                               </View>
                               {isAdmin && (
@@ -681,7 +681,7 @@ export default function PositionHistoryScreen() {
                                   disabled={deletingPositionId === pos.position.id}
                                 >
                                   {deletingPositionId === pos.position.id ? (
-                                    <ActivityIndicator size="small" color="#839958" />
+                                    <ActivityIndicator size="small" color="#A6C27A" />
                                   ) : (
                                     <Text style={styles.deletePositionButtonText}>🗑️</Text>
                                   )}
@@ -697,7 +697,7 @@ export default function PositionHistoryScreen() {
                   {/* Popodnevne smjene */}
                   {afternoon.length > 0 && (
                     <View style={styles.shiftSection}>
-                      <Text style={styles.shiftLabel}>Popodne</Text>
+                      <Text style={styles.shiftLabel}>POPODNE</Text>
                       {sortPositions(afternoon as any).map(pos => {
                         const originalPos = originalPositionsMap.get(pos.position.id);
                         return (
@@ -718,7 +718,7 @@ export default function PositionHistoryScreen() {
                                   {pos.position.start_time.substring(0, 5)} - {pos.position.end_time.substring(0, 5)}
                                 </Text>
                                 <Text style={styles.positionGuard}>
-                                  {pos.guard ? pos.guard.full_name : '[Prazno]'}
+                                  {pos.guard ? pos.guard.username : ''}
                                 </Text>
                               </View>
                               {isAdmin && (
@@ -731,7 +731,7 @@ export default function PositionHistoryScreen() {
                                   disabled={deletingPositionId === pos.position.id}
                                 >
                                   {deletingPositionId === pos.position.id ? (
-                                    <ActivityIndicator size="small" color="#839958" />
+                                    <ActivityIndicator size="small" color="#A6C27A" />
                                   ) : (
                                     <Text style={styles.deletePositionButtonText}>🗑️</Text>
                                   )}
@@ -783,7 +783,7 @@ export default function PositionHistoryScreen() {
                                   </Text>
                                   <Text style={styles.positionExhibition}>{pos.position.exhibition_name}</Text>
                                   <Text style={styles.positionGuard}>
-                                    {pos.guard ? pos.guard.full_name : '[Prazno]'}
+                                    {pos.guard ? pos.guard.username : ''}
                                   </Text>
                                 </View>
                                 {isAdmin && (
@@ -796,7 +796,7 @@ export default function PositionHistoryScreen() {
                                     disabled={deletingPositionId === pos.position.id}
                                   >
                                     {deletingPositionId === pos.position.id ? (
-                                      <ActivityIndicator size="small" color="#839958" />
+                                      <ActivityIndicator size="small" color="#A6C27A" />
                                     ) : (
                                       <Text style={styles.deletePositionButtonText}>🗑️</Text>
                                     )}
@@ -869,7 +869,7 @@ export default function PositionHistoryScreen() {
                 disabled={earningsLoading}
               >
                 {earningsLoading ? (
-                  <ActivityIndicator color="#839958" />
+                  <ActivityIndicator color="#A6C27A" />
                 ) : (
                   <Text style={styles.modalSubmitButtonText}>Izračunaj</Text>
                 )}
@@ -966,7 +966,7 @@ export default function PositionHistoryScreen() {
                 disabled={adminEarningsLoading}
               >
                 {adminEarningsLoading ? (
-                  <ActivityIndicator color="#839958" />
+                  <ActivityIndicator color="#A6C27A" />
                 ) : (
                   <Text style={styles.modalSubmitButtonText}>Dohvati</Text>
                 )}
@@ -1100,7 +1100,7 @@ export default function PositionHistoryScreen() {
                   disabled={actionLoading || !selectedGuardForAssign}
                 >
                   {actionLoading ? (
-                    <ActivityIndicator color="#839958" />
+                    <ActivityIndicator color="#A6C27A" />
                   ) : (
                     <Text style={styles.modalSubmitButtonText}>Upiši čuvara</Text>
                   )}
@@ -1115,9 +1115,9 @@ export default function PositionHistoryScreen() {
                   disabled={actionLoading}
                 >
                   {actionLoading ? (
-                    <ActivityIndicator color="#839958" />
+                    <ActivityIndicator color="#A6C27A" />
                   ) : (
-                    <Text style={styles.modalSubmitButtonText}>Otkaži poziciju</Text>
+                    <Text style={styles.modalSubmitButtonText}>Ispiši čuvara s pozicije</Text>
                   )}
                 </TouchableOpacity>
               </>
@@ -1204,27 +1204,50 @@ export default function PositionHistoryScreen() {
             {/* Date picker */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Datum:</Text>
-              <TouchableOpacity
-                style={styles.datePickerButton}
-                onPress={() => setShowCreatePosDatePicker(true)}
-              >
-                <Text style={styles.datePickerButtonText}>
-                  {createPosDate.toLocaleDateString('hr-HR')}
-                </Text>
-              </TouchableOpacity>
-              
-              {showCreatePosDatePicker && (
-                <DateTimePicker
-                  value={createPosDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={(event, selectedDate) => {
-                    setShowCreatePosDatePicker(Platform.OS === 'ios');
-                    if (selectedDate) {
-                      setCreatePosDate(selectedDate);
-                    }
+              {Platform.OS === 'web' ? (
+                <input
+                  type="date"
+                  value={createPosDate.toISOString().split('T')[0]}
+                  onChange={(e) => {
+                    const d = new Date(e.target.value + 'T00:00:00');
+                    if (!isNaN(d.getTime())) setCreatePosDate(d);
+                  }}
+                  style={{
+                    padding: 12,
+                    borderRadius: 8,
+                    backgroundColor: '#105666',
+                    color: '#F7F4D5',
+                    border: '1px solid #0A3323',
+                    fontSize: 16,
+                    width: '100%',
+                    boxSizing: 'border-box' as const,
                   }}
                 />
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={styles.datePickerButton}
+                    onPress={() => setShowCreatePosDatePicker(true)}
+                  >
+                    <Text style={styles.datePickerButtonText}>
+                      {createPosDate.toLocaleDateString('hr-HR')}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showCreatePosDatePicker && (
+                    <DateTimePicker
+                      value={createPosDate}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={(event, selectedDate) => {
+                        setShowCreatePosDatePicker(Platform.OS === 'ios');
+                        if (selectedDate) {
+                          setCreatePosDate(selectedDate);
+                        }
+                      }}
+                    />
+                  )}
+                </>
               )}
             </View>
             
@@ -1242,6 +1265,8 @@ export default function PositionHistoryScreen() {
                         onChangeText={setCreatePosTimeStart}
                         placeholder="09:00:00"
                         placeholderTextColor="#D3968C"
+                        autoComplete="off"
+                        autoCorrect={false}
                       />
                     </View>
                     
@@ -1253,6 +1278,8 @@ export default function PositionHistoryScreen() {
                         onChangeText={setCreatePosTimeEnd}
                         placeholder="17:00:00"
                         placeholderTextColor="#D3968C"
+                        autoComplete="off"
+                        autoCorrect={false}
                       />
                     </View>
                   </>
@@ -1312,7 +1339,7 @@ export default function PositionHistoryScreen() {
                 disabled={creatingPosition || !createPosExhibitionId}
               >
                 {creatingPosition ? (
-                  <ActivityIndicator size="small" color="#839958" />
+                  <ActivityIndicator size="small" color="#A6C27A" />
                 ) : (
                   <Text style={styles.modalConfirmButtonText}>Kreiraj</Text>
                 )}
@@ -1366,7 +1393,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#839958',
+    color: '#0A3323',
   },
   loadingContainer: {
     flex: 1,
@@ -1375,12 +1402,12 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 10,
-    color: '#D3968C',
+    color: '#0A3323',
   },
   
   // Selection mode
   selectionContainer: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 20,
     shadowColor: '#0A3323',
@@ -1393,7 +1420,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 20,
-    color: '#839958',
+    color: '#0A3323',
   },
   pickerContainer: {
     marginBottom: 16,
@@ -1401,14 +1428,14 @@ const styles = StyleSheet.create({
   pickerLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
     borderRadius: 8,
-    backgroundColor: '#0A3323',
+    backgroundColor: '#F7F4D5',
     overflow: 'hidden',
   },
   picker: {
@@ -1421,10 +1448,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
   },
   confirmButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -1441,13 +1468,14 @@ const styles = StyleSheet.create({
   backButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#0A3323',
+    backgroundColor: '#105666',
     borderRadius: 8,
     marginRight: 16,
   },
   backButtonText: {
     fontSize: 14,
-    color: '#839958',
+    fontWeight: '600',
+    color: '#F7F4D5',
   },
   periodInfo: {
     flex: 1,
@@ -1455,11 +1483,12 @@ const styles = StyleSheet.create({
   periodText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
   positionCount: {
     fontSize: 13,
-    color: '#D3968C',
+    color: '#0A3323',
+    fontWeight: '600',
     marginTop: 2,
   },
   actionButtonsRow: {
@@ -1469,7 +1498,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: '#105666',
+    backgroundColor: '#A6C27A',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -1479,9 +1508,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#105666',
   },
   actionButtonText: {
-    color: '#839958',
+    color: '#F7F4D5',
     fontSize: 14,
     fontWeight: '600',
+    textAlign: 'center',
+    padding: 5,
   },
   refreshButton: {
     alignSelf: 'flex-end',
@@ -1491,6 +1522,7 @@ const styles = StyleSheet.create({
   },
   refreshButtonText: {
     fontSize: 14,
+    fontWeight: '600',
     color: '#105666',
   },
   scheduleScroll: {
@@ -1503,7 +1535,7 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     width: '48%',
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
@@ -1516,7 +1548,7 @@ const styles = StyleSheet.create({
   dayHeader: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -1524,38 +1556,39 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   shiftLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#D3968C',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0A3323',
     marginBottom: 4,
   },
   positionItem: {
     padding: 8,
     borderRadius: 6,
-    backgroundColor: '#105666',
+    backgroundColor: '#A6C27A',
     marginBottom: 4,
+    borderColor: '#0A3323',
+    borderWidth: 1,
   },
   positionEmpty: {
-    backgroundColor: '#D3968C',
+    backgroundColor: '#F7F4D5',
   },
   adminClickable: {
     borderWidth: 1,
-    borderColor: '#839958',
-    borderStyle: 'dashed',
+    borderColor: '#A6C27A',
   },
   positionExhibition: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
   positionTime: {
-    fontSize: 10,
-    color: '#839958',
+    fontSize: 14,
+    color: '#0A3323',
     marginTop: 2,
   },
   positionGuard: {
-    fontSize: 11,
-    color: '#839958',
+    fontSize: 13,
+    color: '#0A3323',
     marginTop: 2,
   },
   specialEventsSection: {
@@ -1564,27 +1597,25 @@ const styles = StyleSheet.create({
   specialEventsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#105666',
+    color: '#0A3323',
     marginBottom: 12,
   },
   specialDayCard: {
     width: '48%',
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#105666',
   },
   specialEventItem: {
     padding: 8,
     borderRadius: 6,
-    backgroundColor: '#105666',
+    backgroundColor: '#A6C27A',
     marginBottom: 4,
   },
   specialEventTime: {
-    fontSize: 10,
-    color: '#839958',
+    fontSize: 14,
+    color: '#0A3323',
     fontWeight: '500',
   },
   
@@ -1596,14 +1627,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#D3968C',
     borderRadius: 12,
     padding: 20,
     width: '90%',
     maxWidth: 400,
   },
   adminModalContent: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#D3968C',
     borderRadius: 12,
     padding: 20,
     width: '95%',
@@ -1613,7 +1644,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -1623,14 +1654,14 @@ const styles = StyleSheet.create({
   modalPickerLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 6,
   },
   modalPickerWrapper: {
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
     borderRadius: 8,
-    backgroundColor: '#0A3323',
+    backgroundColor: '#F7F4D5',
     overflow: 'hidden',
   },
   modalPicker: {
@@ -1643,12 +1674,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#0A3323',
   },
   modalSubmitButtonText: {
-    color: '#839958',
-    fontSize: 15,
-    fontWeight: '600',
+    color: '#F7F4D5',
+    fontSize: 16,
+    fontWeight: '800',
   },
   modalCloseButton: {
     backgroundColor: '#105666',
@@ -1658,18 +1689,19 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   modalCloseButtonText: {
-    color: '#839958',
+    color: '#F7F4D5',
     fontSize: 15,
     fontWeight: '500',
   },
-  modalCancelButton: {
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 10,
-  },
   modalCancelButtonText: {
-    color: '#D3968C',
-    fontSize: 14,
+    color: '#0A3323',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  modalConfirmButtonText: {
+    color: '#F7F4D5',
+    fontSize: 15,
+    fontWeight: '600',
   },
   
   // Earnings results (guard)
@@ -1679,12 +1711,12 @@ const styles = StyleSheet.create({
   earningsResultTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#839958',
+    color: '#F7F4D5',
     marginBottom: 4,
   },
   earningsResultGuard: {
     fontSize: 14,
-    color: '#D3968C',
+    color: '#0A3323',
     marginBottom: 16,
   },
   earningsSummary: {
@@ -1699,11 +1731,11 @@ const styles = StyleSheet.create({
   earningsSummaryValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#105666',
   },
   earningsSummaryLabel: {
-    fontSize: 12,
-    color: '#D3968C',
+    fontSize: 14,
+    color: '#105666',
     marginTop: 4,
   },
   earningsAmount: {
@@ -1723,7 +1755,7 @@ const styles = StyleSheet.create({
   adminEarningsPeriod: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#839958',
+    color: '#F7F4D5',
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -1734,12 +1766,13 @@ const styles = StyleSheet.create({
   },
   adminSummaryLabel: {
     fontSize: 14,
-    color: '#D3968C',
+    color: '#F7F4D5',
+    fontWeight: '500',
   },
   adminSummaryValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#839958',
+    color: '#F7F4D5',
   },
   adminTotalEarnings: {
     color: '#F7F4D5',
@@ -1748,7 +1781,7 @@ const styles = StyleSheet.create({
   guardsBreakdownTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 12,
   },
   guardEarningsCard: {
@@ -1757,12 +1790,12 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   guardName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#839958',
+    color: '#F7F4D5',
   },
   guardStats: {
     flexDirection: 'row',
@@ -1771,8 +1804,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   guardHours: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#D3968C',
+    fontWeight: '600',
   },
   guardEarnings: {
     fontSize: 14,
@@ -1781,7 +1815,7 @@ const styles = StyleSheet.create({
   },
   exhibitionsBreakdown: {
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#F7F4D5',
     paddingTop: 8,
   },
   exhibitionRow: {
@@ -1792,16 +1826,17 @@ const styles = StyleSheet.create({
   },
   exhibitionName: {
     flex: 1,
-    fontSize: 12,
-    color: '#839958',
+    fontSize: 14,
+    color: '#F7F4D5',
   },
   exhibitionHours: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#D3968C',
     marginRight: 12,
+    fontWeight: '600',
   },
   exhibitionEarnings: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#F7F4D5',
     minWidth: 60,
     textAlign: 'right',
@@ -1817,7 +1852,8 @@ const styles = StyleSheet.create({
   },
   positionDetailText: {
     fontSize: 14,
-    color: '#839958',
+    color: '#F7F4D5',
+    fontWeight: 'bold',
     marginBottom: 4,
   },
   positionDetailGuard: {
@@ -1860,10 +1896,11 @@ const styles = StyleSheet.create({
   
   // Create position modal styles
   modalSubtitle: {
-    fontSize: 14,
-    color: '#D3968C',
+    fontSize: 15,
+    color: '#0A3323',
     marginBottom: 16,
     textAlign: 'center',
+    fontWeight: '600',
   },
   inputGroup: {
     marginBottom: 16,
@@ -1872,7 +1909,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
   },
   dropdownButton: {
@@ -1882,12 +1919,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#105666',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     padding: 12,
   },
   dropdownButtonText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#F7F4D5',
   },
   dropdownArrow: {
     fontSize: 12,
@@ -1896,7 +1933,7 @@ const styles = StyleSheet.create({
   dropdownList: {
     backgroundColor: '#0A3323',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     marginTop: 4,
     maxHeight: 200,
@@ -1907,14 +1944,14 @@ const styles = StyleSheet.create({
   dropdownItem: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   dropdownItemSelected: {
     backgroundColor: '#105666',
   },
   dropdownItemText: {
     fontSize: 14,
-    color: '#839958',
+    color: '#F7F4D5',
   },
   dropdownItemTextSelected: {
     color: '#F7F4D5',
@@ -1924,22 +1961,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#105666',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     padding: 12,
     alignItems: 'center',
   },
   datePickerButtonText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#F7F4D5',
   },
   timeInput: {
     backgroundColor: '#105666',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     padding: 12,
     fontSize: 16,
-    color: '#839958',
+    color: '#A6C27A',
   },
   shiftButtons: {
     flexDirection: 'row',
@@ -1950,17 +1987,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#105666',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     padding: 12,
     alignItems: 'center',
   },
   shiftButtonActive: {
     backgroundColor: '#0A3323',
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   shiftButtonText: {
     fontSize: 16,
-    color: '#839958',
+    color: '#A6C27A',
   },
   shiftButtonTextActive: {
     color: '#F7F4D5',
@@ -1969,8 +2006,32 @@ const styles = StyleSheet.create({
   modalButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 10,
+    marginTop: 16,
+    width: '100%',
+  },
+  modalCancelButton: {
+    backgroundColor: '#F7F4D5',
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     marginTop: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#0A3323',
+    justifyContent: 'center',
+    minWidth: 130,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    backgroundColor: '#0A3323',
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginLeft: 10,
+    borderWidth: 1,
+    borderColor: '#0A3323',
+    justifyContent: 'center',
   },
   buttonDisabled: {
     opacity: 0.5,

@@ -4,17 +4,17 @@
 export const COLORS = {
   // Primarne boje
   darkGreen: '#0A3323',
-  mossGreen: '#839958',
+  mossGreen: '#A6C27A',
   beige: '#F7F4D5',
   rosyBrown: '#D3968C',
   midnightGreen: '#105666',
 
   // Semantičke boje
   background: '#F7F4D5', // beige
-  text: '#839958', // moss green (default na beige pozadini)
+  text: '#0A3323', // dark green (default na beige pozadini)
   
   // Stanja
-  success: '#839958', // moss green
+  success: '#A6C27A', // moss green
   warning: '#D3968C', // rosy brown
   error: '#D3968C', // rosy brown
   info: '#105666', // midnight green
@@ -33,16 +33,16 @@ export const PERIOD_COLORS = {
     text: '#F7F4D5', // beige
   },
   fair: {
-    background: '#839958', // moss green
+    background: '#A6C27A', // moss green
     text: '#105666', // midnight green
   },
   manual: {
     background: '#105666', // midnight green
-    text: '#839958', // moss green
+    text: '#A6C27A', // moss green
   },
   neutral: {
     background: '#F7F4D5', // beige
-    text: '#839958', // moss green
+    text: '#0A3323', // dark green
   },
 };
 
@@ -56,7 +56,7 @@ export const getTextColorForBackground = (backgroundColor: string): string => {
     case COLORS.mossGreen:
       return COLORS.midnightGreen;
     case COLORS.beige:
-      return COLORS.mossGreen;
+      return COLORS.darkGreen;
     case COLORS.rosyBrown:
       return COLORS.beige;
     case COLORS.midnightGreen:
@@ -199,10 +199,10 @@ export const COMMON_STYLES = {
   },
   body: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.mossGreen,
+    color: COLORS.darkGreen,
   },
   caption: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    color: COLORS.mossGreen,
+    color: COLORS.darkGreen,
   },
 };

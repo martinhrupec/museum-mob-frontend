@@ -10,10 +10,10 @@ import {
   Modal,
   Pressable,
   TextInput,
-  Alert,
   ScrollView,
   Keyboard,
 } from 'react-native';
+import { crossAlert } from '../utils/alert';
 import { useAuthStore } from '../store/authStore';
 import {
   getReceptionReports,
@@ -123,7 +123,7 @@ export default function ReceptionReportsScreen() {
       setExhibitions(exhibitionsList);
     } catch (error) {
       console.error('Error fetching data:', error);
-      Alert.alert('Greška', 'Nije moguće učitati prijave.');
+      crossAlert('Greška', 'Nije moguće učitati prijave.');
     } finally {
       setLoading(false);
     }
@@ -157,7 +157,7 @@ export default function ReceptionReportsScreen() {
       setThisWeekSnapshot(snapshot);
     } catch (error) {
       console.error('Error fetching this week snapshot:', error);
-      Alert.alert('Greška', 'Nije moguće učitati pozicije.');
+      crossAlert('Greška', 'Nije moguće učitati pozicije.');
     } finally {
       setSnapshotLoading(false);
     }
@@ -194,11 +194,11 @@ export default function ReceptionReportsScreen() {
 
   const handleSubmit = async () => {
     if (!selectedPositionId) {
-      Alert.alert('Greška', 'Molimo odaberite poziciju.');
+      crossAlert('Greška', 'Molimo odaberite poziciju.');
       return;
     }
     if (!reportText.trim()) {
-      Alert.alert('Greška', 'Molimo unesite kratki opis problema.');
+      crossAlert('Greška', 'Molimo unesite kratki opis problema.');
       return;
     }
 
@@ -208,7 +208,7 @@ export default function ReceptionReportsScreen() {
         position_id: selectedPositionId,
         report_text: reportText.trim(),
       });
-      Alert.alert('Uspjeh', 'Prijava je uspješno poslana recepciji.');
+      crossAlert('Uspjeh', 'Prijava je uspješno poslana recepciji.');
       closeModal();
       fetchData();
     } catch (error: any) {
@@ -216,7 +216,7 @@ export default function ReceptionReportsScreen() {
       const errorMessage = error.response?.data?.detail 
         || error.response?.data?.error 
         || 'Nije moguće poslati prijavu.';
-      Alert.alert('Greška', errorMessage);
+      crossAlert('Greška', errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -248,12 +248,12 @@ export default function ReceptionReportsScreen() {
         <Text style={styles.reportDate}>{formatDateTime(item.created_at)}</Text>
       </View>
       <View style={styles.positionInfo}>
-        <Text style={styles.exhibitionName}>{item.position.exhibition_name}</Text>
-        <Text style={styles.positionTime}>
-          {formatDate(item.position.date)} | {formatTime(item.position.start_time)} - {formatTime(item.position.end_time)}
-        </Text>
+        <Text style={styles.reportText}>{item.report_text}</Text>
       </View>
-      <Text style={styles.reportText}>{item.report_text}</Text>
+      <Text style={styles.exhibitionName}>{item.position.exhibition_name}</Text>
+      <Text style={styles.positionTime}>
+        {formatDate(item.position.date)} | {formatTime(item.position.start_time)} - {formatTime(item.position.end_time)}
+      </Text>
     </View>
   );
 
@@ -297,6 +297,8 @@ export default function ReceptionReportsScreen() {
             value={searchText}
             onChangeText={setSearchText}
             autoCapitalize="none"
+            autoComplete="off"
+            autoCorrect={false}
             returnKeyType="search"
             blurOnSubmit={true}
             onSubmitEditing={() => Keyboard.dismiss()}
@@ -402,13 +404,11 @@ export default function ReceptionReportsScreen() {
       {/* Filter/Sort Modal */}
       <Modal visible={showFiltersModal} transparent animationType="slide">
         <View style={styles.overlay}>
-          <View style={styles.filtersModalContent}>
-            <Text style={styles.modalTitle}>Filteri i sortiranje</Text>
-            
+          <View style={styles.filtersModalContent}>            
             <ScrollView showsVerticalScrollIndicator={false}>
               {/* FILTERI */}
               <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>🔍 FILTERI</Text>
+                <Text style={styles.sectionTitle}>FILTERI</Text>
                 
                 <Text style={styles.label}>Izložba</Text>
                 <View style={styles.pickerContainer}>
@@ -428,7 +428,7 @@ export default function ReceptionReportsScreen() {
 
               {/* SORTIRANJE */}
               <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>📊 SORTIRANJE</Text>
+                <Text style={styles.sectionTitle}>SORTIRANJE</Text>
                 
                 <Text style={styles.label}>Redoslijed po datumu</Text>
                 <View style={styles.pickerContainer}>
@@ -457,7 +457,7 @@ export default function ReceptionReportsScreen() {
                 style={styles.filterApplyButton}
                 onPress={applyFilters}
               >
-                <Text style={styles.filterApplyButtonText}>✓ Primijeni</Text>
+                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -475,7 +475,7 @@ export default function ReceptionReportsScreen() {
               style={[styles.dropdownItem, tempExhibitionFilter === null && styles.dropdownItemSelected]}
               onPress={() => { setTempExhibitionFilter(null); setShowExhibitionDropdown(false); }}
             >
-              <Text style={styles.dropdownItemText}>Sve izložbe</Text>
+              <Text style={[styles.dropdownItemText, tempExhibitionFilter === null && styles.dropdownItemTextSelected]}>Sve izložbe</Text>
               {tempExhibitionFilter === null && <Text style={styles.checkmark}>✓</Text>}
             </TouchableOpacity>
             {exhibitions.map((ex) => (
@@ -484,7 +484,7 @@ export default function ReceptionReportsScreen() {
                 style={[styles.dropdownItem, tempExhibitionFilter === ex.id && styles.dropdownItemSelected]}
                 onPress={() => { setTempExhibitionFilter(ex.id); setShowExhibitionDropdown(false); }}
               >
-                <Text style={styles.dropdownItemText}>{ex.name}</Text>
+                <Text style={[styles.dropdownItemText, tempExhibitionFilter === ex.id && styles.dropdownItemTextSelected]}>{ex.name}</Text>
                 {tempExhibitionFilter === ex.id && <Text style={styles.checkmark}>✓</Text>}
               </TouchableOpacity>
             ))}
@@ -494,8 +494,8 @@ export default function ReceptionReportsScreen() {
 
       {/* Sort Order Dropdown Modal */}
       <Modal visible={showSortDropdown} transparent animationType="fade">
-        <TouchableOpacity 
-          style={styles.dropdownOverlay} 
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
           onPress={() => setShowSortDropdown(false)}
         >
           <View style={styles.dropdownContent}>
@@ -503,14 +503,14 @@ export default function ReceptionReportsScreen() {
               style={[styles.dropdownItem, tempSortOrder === 'desc' && styles.dropdownItemSelected]}
               onPress={() => { setTempSortOrder('desc'); setShowSortDropdown(false); }}
             >
-              <Text style={styles.dropdownItemText}>↓ Silazno (najnovije prvo)</Text>
+              <Text style={[styles.dropdownItemText, tempSortOrder === 'desc' && styles.dropdownItemTextSelected]}>↓ Silazno (najnovije prvo)</Text>
               {tempSortOrder === 'desc' && <Text style={styles.checkmark}>✓</Text>}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.dropdownItem, tempSortOrder === 'asc' && styles.dropdownItemSelected]}
               onPress={() => { setTempSortOrder('asc'); setShowSortDropdown(false); }}
             >
-              <Text style={styles.dropdownItemText}>↑ Uzlazno (najstarije prvo)</Text>
+              <Text style={[styles.dropdownItemText, tempSortOrder === 'asc' && styles.dropdownItemTextSelected]}>↑ Uzlazno (najstarije prvo)</Text>
               {tempSortOrder === 'asc' && <Text style={styles.checkmark}>✓</Text>}
             </TouchableOpacity>
           </View>
@@ -559,6 +559,8 @@ export default function ReceptionReportsScreen() {
                   placeholder="Opišite problem..."
                   multiline
                   numberOfLines={4}
+                  autoComplete="off"
+                  autoCorrect={false}
                   editable={!submitting}
                 />
               </>
@@ -605,10 +607,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   // Search bar styles
   searchContainer: {
@@ -625,14 +627,14 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 10,
     paddingLeft: 35,
     paddingRight: 35,
     fontSize: 15,
     backgroundColor: '#F7F4D5',
-    color: '#839958',
+    color: '#0A3323',
   },
   clearButton: {
     position: 'absolute',
@@ -671,12 +673,12 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 12,
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '500',
   },
   filterChipClose: {
     fontSize: 14,
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: 'bold',
   },
   createButton: {
@@ -686,10 +688,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 5,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   createButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -707,7 +709,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   reportCard: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -726,14 +728,15 @@ const styles = StyleSheet.create({
   reportGuard: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
   reportDate: {
-    fontSize: 12,
-    color: '#D3968C',
+    fontSize: 14,
+    color: '#0A3323',
+    fontWeight: '600',
   },
   positionInfo: {
-    backgroundColor: '#105666',
+    backgroundColor: '#F7F4D5',
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
@@ -741,21 +744,23 @@ const styles = StyleSheet.create({
   exhibitionName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 4,
   },
   positionTime: {
     fontSize: 12,
-    color: '#D3968C',
+    fontWeight: '600',
+    color: '#0A3323',
   },
   reportText: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
+    fontWeight: '600',
     lineHeight: 20,
   },
   // Filter Modal styles
   filtersModalContent: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 16,
     padding: 24,
     width: '90%',
@@ -768,13 +773,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#D3968C',
+    color: '#0A3323',
     marginBottom: 12,
   },
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 6,
     marginTop: 8,
   },
@@ -786,14 +791,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     backgroundColor: '#F7F4D5',
   },
   pickerText: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
   },
   pickerArrow: {
     fontSize: 12,
@@ -823,10 +828,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   filterApplyButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -838,7 +843,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dropdownContent: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 12,
     padding: 8,
     width: '80%',
@@ -857,11 +862,14 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 14,
-    color: '#839958',
+    color: '#0A3323',
+  },
+  dropdownItemTextSelected: {
+    color: '#FFFFFF',
   },
   checkmark: {
     fontSize: 16,
-    color: '#839958',
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
   // Create Modal styles
@@ -872,7 +880,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#0A3323',
+    backgroundColor: '#A6C27A',
     borderRadius: 16,
     padding: 24,
     width: '90%',
@@ -882,7 +890,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -902,32 +910,32 @@ const styles = StyleSheet.create({
   noPositionsText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#D3968C',
+    color: '#0A3323',
     textAlign: 'center',
     marginBottom: 8,
   },
   noPositionsSubtext: {
-    fontSize: 14,
-    color: '#D3968C',
+    fontSize: 15,
+    color: '#0A3323',
     textAlign: 'center',
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
     marginBottom: 8,
     marginTop: 12,
   },
   positionsList: {
     maxHeight: 150,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
   },
   positionOption: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#839958',
+    borderBottomColor: '#A6C27A',
   },
   positionOptionSelected: {
     backgroundColor: '#105666',
@@ -935,7 +943,7 @@ const styles = StyleSheet.create({
   positionOptionText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#839958',
+    color: '#0A3323',
   },
   positionOptionTime: {
     fontSize: 12,
@@ -947,14 +955,14 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
     minHeight: 100,
     textAlignVertical: 'top',
     backgroundColor: '#F7F4D5',
-    color: '#839958',
+    color: '#0A3323',
   },
   modalButtons: {
     flexDirection: 'row',
@@ -967,11 +975,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   cancelButtonText: {
     fontSize: 14,
-    color: '#D3968C',
+    color: '#0A3323',
     fontWeight: '600',
   },
   submitButton: {
@@ -982,14 +990,14 @@ const styles = StyleSheet.create({
     minWidth: 80,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#839958',
+    borderColor: '#A6C27A',
   },
   submitButtonDisabled: {
     backgroundColor: '#D3968C',
   },
   submitButtonText: {
     fontSize: 14,
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
   },
   paginationContainer: {
@@ -999,7 +1007,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: '#F7F4D5',
     borderTopWidth: 1,
-    borderTopColor: '#839958',
+    borderTopColor: '#A6C27A',
   },
   paginationButton: {
     backgroundColor: '#0A3323',
@@ -1013,7 +1021,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D3968C',
   },
   paginationButtonText: {
-    color: '#839958',
+    color: '#A6C27A',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -1023,6 +1031,6 @@ const styles = StyleSheet.create({
   paginationText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#839958',
+    color: '#0A3323',
   },
 });
