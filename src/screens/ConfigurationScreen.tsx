@@ -1772,7 +1772,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   buttonDisabled: {
-    backgroundColor: '#D3968C',
+    backgroundColor: '#0A3323',
   },
   currentValue: {
     fontSize: 13,

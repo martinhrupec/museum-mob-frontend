@@ -27,7 +27,7 @@ interface CustomSideMenuProps {
 
 export default function CustomSideMenu({ visible, onClose }: CustomSideMenuProps) {
   const navigation = useNavigation();
-  const { user, refreshToken, logout: logoutStore } = useAuthStore();
+  const { user, refreshToken, isSessionAuth, logout: logoutStore } = useAuthStore();
   const isAdmin = user?.role === 'admin';
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -61,7 +61,10 @@ export default function CustomSideMenu({ visible, onClose }: CustomSideMenuProps
     try {
       setIsLoggingOut(true);
       setShowLogoutModal(false);
-      if (refreshToken) {
+      // Web: session logout (bez tokena), Mobile: JWT logout (s refresh tokenom)
+      if (isSessionAuth) {
+        await logoutApi();
+      } else if (refreshToken) {
         await logoutApi(refreshToken);
       }
     } catch (error) {

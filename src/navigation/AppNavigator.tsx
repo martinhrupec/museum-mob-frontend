@@ -39,7 +39,7 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
-  const { accessToken, refreshToken, isLoading, loadTokens } = useAuthStore();
+  const { accessToken, refreshToken, isSessionAuth, isLoading, loadTokens } = useAuthStore();
   const [menuVisible, setMenuVisible] = useState(false);
   const [navigationRef, setNavigationRef] = useState<any>(null);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
@@ -59,16 +59,16 @@ export default function AppNavigator() {
       }
     };
     
-    if (accessToken || refreshToken) {
+    if (accessToken || refreshToken || isSessionAuth) {
       loadSettings();
     }
-  }, [accessToken, refreshToken]);
+  }, [accessToken, refreshToken, isSessionAuth]);
 
   if (isLoading) {
     return null;
   }
 
-  const isAuthenticated = !!(accessToken || refreshToken);
+  const isAuthenticated = !!(accessToken || refreshToken || isSessionAuth);
   const headerColor = periodInfo?.color || '#F7F4D5';
 
   // Helper za tekst boju na osnovu pozadine

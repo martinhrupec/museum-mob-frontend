@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient, { isWeb } from './client';
 import {
     SystemSettings,
     SystemSettingsUpdateData,
@@ -55,20 +55,22 @@ import {
 
 /**
  * Login korisnika
- * @param username - korisničko ime
- * @param password - lozinka
- * @returns { access: string, refresh: string }
+ * Web: session auth via /api/login/
+ * Mobile: JWT auth via /token/
  */
 export const login = async (username: string, password: string) => {
-    const response = await apiClient.post('/token/', {
-        username,
-        password,
-    });
-    return response.data;
+    if (isWeb) {
+        try { await apiClient.get('/auth/check/'); } catch {}
+        const response = await apiClient.post('/login/', { username, password });
+        return response.data;
+    }
+    // Mobile JWT login
+    const response = await apiClient.post('/token/', { username, password });
+    return response.data; // { access, refresh }
 };
 
 /**
- * Refresh access tokena
+ * Refresh access tokena (samo mobile)
  * @param refreshToken - refresh token dobijen pri loginu
  * @returns { access: string }
  */
@@ -80,14 +82,21 @@ export const refreshAccessToken = async (refreshToken: string) => {
 };
 
 /**
- * Logout korisnika (blacklistuje token na serveru)
- * @param refreshToken - refresh token koji treba blacklistovati
+ * Logout korisnika
+ * Web: session logout via /api/logout/
+ * Mobile: blacklistuje JWT refresh token
  */
-export const logout = async (refreshToken: string) => {
-    await apiClient.post('/token/logout/', {
-        refresh: refreshToken,
-    });
-    // Response nema body, samo status 200/204
+export const logout = async (refreshToken?: string) => {
+    if (isWeb) {
+        // Dohvati CSRF cookie (interceptor ga pročita i pošalje kao X-CSRFToken header)
+        await apiClient.get('/auth/check/');
+        await apiClient.post('/logout/');
+        return;
+    }
+    // Mobile JWT logout
+    if (refreshToken) {
+        await apiClient.post('/token/logout/', { refresh: refreshToken });
+    }
 };
 
 /**
