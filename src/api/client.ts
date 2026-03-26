@@ -28,7 +28,7 @@ const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
     async (config) => {
-        console.log('📤 Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''));
+        console.log('Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''));
 
         if (isWeb) {
             const needsCsrf = config.method !== 'get';
@@ -52,7 +52,7 @@ apiClient.interceptors.request.use(
 
 // Response interceptor - automatski refresh tokena ako je access istekao (samo mobile)
 apiClient.interceptors.response.use(
-    (response) => response, // Uspešan response - propusti dalje
+    (response) => response, // Uspješan response - propusti dalje
     async (error) => {
         const originalRequest = error.config;
 
@@ -78,7 +78,7 @@ apiClient.interceptors.response.use(
                 }
 
                 const refreshResponse = await axios.post(
-                    `${API_BASE_URL}/api/refresh/`,
+                    `${API_URL}/token/refresh/`,
                     { refresh: refreshToken }
                 );
 
