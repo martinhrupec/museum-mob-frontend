@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity, Text, Linking, Platform } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 import CustomSideMenu from '../components/CustomSideMenu';
 import WebResponsiveWrapper from '../components/WebResponsiveWrapper';
@@ -100,6 +100,15 @@ export default function AppNavigator() {
               style={{ paddingLeft: 15 }}
             >
               <Text style={{ fontSize: 24, color: headerTextColor }}>☰</Text>
+            </TouchableOpacity>
+          ) : undefined,
+          headerRight: isAuthenticated && Platform.OS === 'web' ? () => (
+            <TouchableOpacity
+              onPress={() => Linking.openURL('https://muzejski-cuvari.duckdns.org/downloads/app.apk')}
+              style={{ paddingRight: 15, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+            >
+              <Text style={{ fontSize: 12, color: headerTextColor }}>Android App</Text>
+              <Text style={{ fontSize: 16, color: headerTextColor }}>⬇</Text>
             </TouchableOpacity>
           ) : undefined,
         })}

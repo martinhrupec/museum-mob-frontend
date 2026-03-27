@@ -41,3 +41,5 @@ yarn-error.*
 /android
 
 frontend_deploy.md
+
+apk/
