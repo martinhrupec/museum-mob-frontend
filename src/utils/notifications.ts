@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import { crossAlert } from './alert';
-import { SystemSettings } from '../types';
+import { SystemSettings, AssignmentPosition } from '../types';
 
 // Konfiguracija kako će se notifikacije prikazivati kada je app u foreground
 Notifications.setNotificationHandler({
@@ -19,8 +19,6 @@ Notifications.setNotificationHandler({
  * Zatraži permisije za notifikacije
  */
 export async function registerForPushNotificationsAsync(): Promise<boolean> {
-  let token;
-
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'default',
@@ -70,6 +68,53 @@ function getDateForPeriodStart(
   target.setHours(h, m, s || 0, 0);
 
   return target;
+}
+
+/**
+ * Schedule notifikaciju 2 sata prije prve smjene svakog dana
+ */
+export async function scheduleShiftNotifications(
+  assignments: AssignmentPosition[]
+): Promise<void> {
+  const now = new Date();
+
+  // Grupiraj assignmente po datumu i nađi najraniji start_time po danu
+  const earliestByDate = new Map<string, AssignmentPosition>();
+
+  for (const ap of assignments) {
+    if (!ap.is_taken || !ap.guard) continue;
+
+    const date = ap.position.date;
+    const existing = earliestByDate.get(date);
+
+    if (!existing || ap.position.start_time < existing.position.start_time) {
+      earliestByDate.set(date, ap);
+    }
+  }
+
+  for (const [date, ap] of earliestByDate) {
+    const [h, m, s] = ap.position.start_time.split(':').map(Number);
+    const shiftDate = new Date(date);
+    shiftDate.setHours(h, m, s || 0, 0);
+
+    // 2 sata prije smjene
+    const notifyDate = new Date(shiftDate.getTime() - 2 * 60 * 60 * 1000);
+
+    if (notifyDate > now) {
+      const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🏛️ Smjena za 2 sata',
+          body: `Vaša smjena na "${ap.position.exhibition_name}" počinje u ${timeStr}.`,
+          sound: 'default',
+        },
+        trigger: {
+          type: 'date',
+          date: notifyDate,
+        } as Notifications.DateTriggerInput,
+      });
+    }
+  }
 }
 
 /**
@@ -134,7 +179,7 @@ export async function schedulePeriodNotifications(settings: SystemSettings): Pro
         content: {
           title: '⚙️ Konfiguracijski period',
           body: 'Konfiguracijski period je počeo!',
-          sound: true,
+          sound: 'default',
         },
         trigger: {
           type: 'date',
@@ -143,20 +188,20 @@ export async function schedulePeriodNotifications(settings: SystemSettings): Pro
       });
     }
 
-    // Config period - 5 min prije kraja
-    const configEndMinus5 = new Date(configEnd);
-    configEndMinus5.setDate(configEndMinus5.getDate() + weekOffset);
-    configEndMinus5.setMinutes(configEndMinus5.getMinutes() - 5);
-    if (configEndMinus5 > now) {
+    // Config period - 30 min prije kraja
+    const configEndMinus30 = new Date(configEnd);
+    configEndMinus30.setDate(configEndMinus30.getDate() + weekOffset);
+    configEndMinus30.setMinutes(configEndMinus30.getMinutes() - 30);
+    if (configEndMinus30 > now) {
       await Notifications.scheduleNotificationAsync({
         content: {
           title: '⚠️ Konfiguracijski period',
-          body: 'Još 5 minuta do kraja konfiguracijskog perioda!',
-          sound: true,
+          body: 'Uskoro završava konfiguracijski period!',
+          sound: 'default',
         },
         trigger: {
           type: 'date',
-          date: configEndMinus5,
+          date: configEndMinus30,
         } as Notifications.DateTriggerInput,
       });
     }
@@ -169,7 +214,7 @@ export async function schedulePeriodNotifications(settings: SystemSettings): Pro
         content: {
           title: '⏱️ Fer period',
           body: 'Fer period ručnog upisivanja je počeo!',
-          sound: true,
+          sound: 'default',
         },
         trigger: {
           type: 'date',
@@ -178,20 +223,20 @@ export async function schedulePeriodNotifications(settings: SystemSettings): Pro
       });
     }
 
-    // Grace period - 5 min prije kraja
-    const graceEndMinus5 = new Date(graceEnd);
-    graceEndMinus5.setDate(graceEndMinus5.getDate() + weekOffset);
-    graceEndMinus5.setMinutes(graceEndMinus5.getMinutes() - 5);
-    if (graceEndMinus5 > now) {
+    // Grace period - 30 min prije kraja
+    const graceEndMinus30 = new Date(graceEnd);
+    graceEndMinus30.setDate(graceEndMinus30.getDate() + weekOffset);
+    graceEndMinus30.setMinutes(graceEndMinus30.getMinutes() - 30);
+    if (graceEndMinus30 > now) {
       await Notifications.scheduleNotificationAsync({
         content: {
           title: '⚠️ Fer period',
-          body: 'Još 5 minuta fer perioda!',
-          sound: true,
+          body: 'Uskoro završava fer period!',
+          sound: 'default',
         },
         trigger: {
           type: 'date',
-          date: graceEndMinus5,
+          date: graceEndMinus30,
         } as Notifications.DateTriggerInput,
       });
     }
@@ -204,7 +249,7 @@ export async function schedulePeriodNotifications(settings: SystemSettings): Pro
         content: {
           title: '✍️ Ručno upisivanje',
           body: 'Ručno upisivanje/ispisivanje pozicija je počelo!',
-          sound: true,
+          sound: 'default',
         },
         trigger: {
           type: 'date',
@@ -213,20 +258,20 @@ export async function schedulePeriodNotifications(settings: SystemSettings): Pro
       });
     }
 
-    // Manual period - 5 min prije kraja
-    const manualEndMinus5 = new Date(manualEnd);
-    manualEndMinus5.setDate(manualEndMinus5.getDate() + weekOffset);
-    manualEndMinus5.setMinutes(manualEndMinus5.getMinutes() - 5);
-    if (manualEndMinus5 > now) {
+    // Manual period - 30 min prije kraja
+    const manualEndMinus30 = new Date(manualEnd);
+    manualEndMinus30.setDate(manualEndMinus30.getDate() + weekOffset);
+    manualEndMinus30.setMinutes(manualEndMinus30.getMinutes() - 30);
+    if (manualEndMinus30 > now) {
       await Notifications.scheduleNotificationAsync({
         content: {
           title: '⚠️ Ručno upisivanje/ispisivanje',
-          body: 'Još 5 minuta za besplatno ispisivanje pozicija!',
-          sound: true,
+          body: 'Uskoro završava period ručnog upisivanja/ispisivanja!',
+          sound: 'default',
         },
         trigger: {
           type: 'date',
-          date: manualEndMinus5,
+          date: manualEndMinus30,
         } as Notifications.DateTriggerInput,
       });
     }

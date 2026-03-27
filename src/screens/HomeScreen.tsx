@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { crossAlert } from '../utils/alert';
 import { useAuthStore } from '../store/authStore';
@@ -77,8 +77,18 @@ export default function HomeScreen() {
   const [adminNotifications, setAdminNotifications] = useState<AdminNotification[]>([]);
   const [adminNotificationsLoading, setAdminNotificationsLoading] = useState(false);
   
+  // Filtriraj samo moje assignmente za notifikacije o smjenama
+  const myAssignments = useMemo(() => {
+    if (!snapshot || user?.role !== 'guard') return null;
+    const guardProfile = (user as any).guard_profile;
+    if (!guardProfile) return null;
+    return snapshot.positions.filter(
+      (ap) => ap.is_taken && ap.guard && ap.guard.id === guardProfile.id
+    );
+  }, [snapshot, user]);
+
   const periodInfo = usePeriodTimer(settings);
-  const { isEnabled: notificationsEnabled } = useNotifications(settings);
+  const { isEnabled: notificationsEnabled } = useNotifications(settings, myAssignments);
 
   useEffect(() => {
     loadSettings();
