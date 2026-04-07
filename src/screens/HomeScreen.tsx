@@ -752,7 +752,7 @@ export default function HomeScreen() {
                                 {sortPositions(daySpecialPositions).map(pos => (
                                   <TouchableOpacity
                                     key={pos.position.id}
-                                    style={[styles.specialEventItem, !pos.is_taken && styles.positionEmpty, getPositionStyle(pos)]}
+                                    style={[styles.positionItem, !pos.is_taken && styles.positionEmpty, getPositionStyle(pos)]}
                                     onPress={() => handlePositionPress(pos)}
                                   >
                                     <Text style={styles.specialEventTime}>
@@ -760,7 +760,7 @@ export default function HomeScreen() {
                                     </Text>
                                     <Text style={styles.positionExhibition}>{pos.position.exhibition_name}</Text>
                                     <Text style={styles.positionGuard}>
-                                      {pos.guard ? pos.guard.full_name : '[Prazno]'}
+                                      {pos.guard ? pos.guard.username : ''}
                                     </Text>
                                   </TouchableOpacity>
                                 ))}
@@ -986,7 +986,7 @@ const styles = StyleSheet.create({
   },
   specialDayCard: {
     width: '48%',
-    backgroundColor: '#105666',
+    backgroundColor: '#A6C27A',
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
@@ -996,7 +996,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
     borderWidth: 2,
-    borderColor: '#A6C27A',
+    borderColor: '#105666',
   },
   specialEventItem: {
     backgroundColor: '#A6C27A',
@@ -1013,7 +1013,7 @@ const styles = StyleSheet.create({
   },
   specialEventTime: {
     fontSize: 10,
-    color: '#0A3323',
+    color: '#105666',
     marginTop: 2,
   },
   adminNotificationsSection: {

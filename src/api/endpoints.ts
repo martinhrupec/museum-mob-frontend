@@ -194,12 +194,20 @@ export const deleteUser = async (userId: number) => {
  * Mijenja lozinku trenutno ulogiranog korisnika
  * @param passwords - stara i nova lozinka
  */
-export const changePassword = async (passwords: {
+export const changePassword = async (userId: number, passwords: {
     old_password: string;
     new_password: string;
     new_password_confirm: string;
 }) => {
-    const response = await apiClient.post('/users/change_password/', passwords);
+    const response = await apiClient.post(`/users/${userId}/change_password/`, passwords);
+    return response.data;
+};
+
+export const setPassword = async (userId: number, passwords: {
+    new_password: string;
+    new_password_confirm: string;
+}) => {
+    const response = await apiClient.post(`/users/${userId}/set_password/`, passwords);
     return response.data;
 };
 

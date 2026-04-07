@@ -90,8 +90,9 @@ apiClient.interceptors.response.use(
                 return apiClient(originalRequest);
 
             } catch (refreshError) {
-                await AsyncStorage.removeItem('accessToken');
-                await AsyncStorage.removeItem('refreshToken');
+                // Refresh token istekao - odjavi korisnika
+                const { useAuthStore } = await import('../store/authStore');
+                await useAuthStore.getState().logout();
                 return Promise.reject(refreshError);
             }
         }

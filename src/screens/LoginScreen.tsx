@@ -58,10 +58,17 @@ export default function LoginScreen() {
       console.error('❌ Error response:', error.response?.data);
       console.error('❌ Error message:', error.message);
 
-      const errorMessage = error.response?.data?.detail
-        || error.response?.data?.message
-        || error.message
-        || 'Proverite korisničko ime i lozinku';
+      let errorMessage: string;
+      if (error.response?.status === 401 || error.response?.status === 400) {
+        errorMessage = 'Pogrešno korisničko ime ili lozinka. Provjerite podatke i pokušajte ponovo.';
+      } else if (!error.response) {
+        errorMessage = 'Nije moguće spojiti se na server. Provjerite internetsku vezu.';
+      } else {
+        errorMessage = error.response?.data?.detail
+          || error.response?.data?.message
+          || error.message
+          || 'Greška pri prijavi. Pokušajte ponovo.';
+      }
 
       crossAlert('Greška pri prijavi', errorMessage);
     } finally {
@@ -76,6 +83,7 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="Korisničko ime"
+        placeholderTextColor="#7A9A6A"
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
@@ -83,10 +91,11 @@ export default function LoginScreen() {
         autoCorrect={false}
         editable={!isLoading}
       />
-      
+
       <TextInput
         style={styles.input}
         placeholder="Lozinka"
+        placeholderTextColor="#7A9A6A"
         value={password}
         onChangeText={setPassword}
         secureTextEntry

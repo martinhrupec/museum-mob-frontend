@@ -14,13 +14,14 @@ import {
 import { crossAlert } from '../utils/alert';
 import { useAuthStore } from '../store/authStore';
 import { 
-  getUsers, 
+  getUsers,
   getCurrentUser,
-  createUser, 
+  createUser,
   updateUserProfile,
-  updateUser, 
-  deleteUser, 
-  changePassword 
+  updateUser,
+  deleteUser,
+  changePassword,
+  setPassword,
 } from '../api/endpoints';
 import { User } from '../types';
 
@@ -28,7 +29,7 @@ type SortField = 'username' | 'last_name' | 'last_login' | 'last_mobile_login' |
 type SortOrder = 'asc' | 'desc';
 
 export default function UsersScreen() {
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser, logout } = useAuthStore();
   const isAdmin = currentUser?.role === 'admin';
 
   const [users, setUsers] = useState<User[]>([]);
@@ -36,6 +37,7 @@ export default function UsersScreen() {
   const [creatingUser, setCreatingUser] = useState(false);
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [settingPassword, setSettingPassword] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   // Pagination
@@ -69,6 +71,7 @@ export default function UsersScreen() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showCurrentUserModal, setShowCurrentUserModal] = useState(false);
+  const [showSetPasswordModal, setShowSetPasswordModal] = useState(false);
 
   // Form podaci
   const [formData, setFormData] = useState({
@@ -82,6 +85,11 @@ export default function UsersScreen() {
 
   const [passwordData, setPasswordData] = useState({
     old_password: '',
+    new_password: '',
+    new_password_confirm: '',
+  });
+
+  const [adminSetPasswordData, setAdminSetPasswordData] = useState({
     new_password: '',
     new_password_confirm: '',
   });
@@ -360,6 +368,11 @@ export default function UsersScreen() {
       return;
     }
 
+    if (passwordData.new_password.length < 8) {
+      crossAlert('Greška', 'Lozinka mora imati 8 znakova');
+      return;
+    }
+
     if (passwordData.new_password !== passwordData.new_password_confirm) {
       crossAlert('Greška', 'Nove lozinke se ne podudaraju');
       return;
@@ -369,14 +382,47 @@ export default function UsersScreen() {
 
     try {
       setChangingPassword(true);
-      await changePassword(passwordData);
-      crossAlert('Uspjeh', 'Lozinka je promijenjena');
+      await changePassword(currentUser!.id, passwordData);
       setShowPasswordModal(false);
       setPasswordData({ old_password: '', new_password: '', new_password_confirm: '' });
+      crossAlert('Uspjeh', 'Lozinka je promijenjena. Molimo prijavite se ponovo.', [
+        { text: 'OK', onPress: () => logout() },
+      ]);
     } catch (error: any) {
       crossAlert('Greška', error.response?.data?.detail || 'Nije moguće promijeniti lozinku');
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleSetPassword = async () => {
+    if (!adminSetPasswordData.new_password || !adminSetPasswordData.new_password_confirm) {
+      crossAlert('Greška', 'Sva polja su obavezna');
+      return;
+    }
+
+    if (adminSetPasswordData.new_password.length < 8) {
+      crossAlert('Greška', 'Lozinka mora imati 8 znakova');
+      return;
+    }
+
+    if (adminSetPasswordData.new_password !== adminSetPasswordData.new_password_confirm) {
+      crossAlert('Greška', 'Lozinke se ne podudaraju');
+      return;
+    }
+
+    if (settingPassword || !selectedUser) return;
+
+    try {
+      setSettingPassword(true);
+      await setPassword(selectedUser.id, adminSetPasswordData);
+      crossAlert('Uspjeh', `Lozinka za ${selectedUser.username} je postavljena`);
+      setShowSetPasswordModal(false);
+      setAdminSetPasswordData({ new_password: '', new_password_confirm: '' });
+    } catch (error: any) {
+      crossAlert('Greška', error.response?.data?.detail || 'Nije moguće postaviti lozinku');
+    } finally {
+      setSettingPassword(false);
     }
   };
 
@@ -618,6 +664,15 @@ export default function UsersScreen() {
               onPress={() => handleEditProfile(selectedUser?.id)}
             >
               <Text style={styles.actionButtonText}>Uredi profil</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                setShowActionModal(false);
+                setShowSetPasswordModal(true);
+              }}
+            >
+              <Text style={styles.actionButtonText}>Promijeni lozinku</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, styles.deleteButton]}
@@ -895,6 +950,61 @@ export default function UsersScreen() {
         </View>
       </Modal>
 
+      {/* Modal za admin postavljanje lozinke drugog korisnika */}
+      <Modal visible={showSetPasswordModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.passwordModalContent}>
+            <Text style={styles.modalTitle}>Postavi lozinku</Text>
+            {selectedUser && (
+              <Text style={styles.label}>Korisnik: {selectedUser.username}</Text>
+            )}
+
+            <Text style={styles.label}>Nova lozinka</Text>
+            <TextInput
+              style={styles.input}
+              value={adminSetPasswordData.new_password}
+              onChangeText={(text) => setAdminSetPasswordData({ ...adminSetPasswordData, new_password: text })}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="new-password"
+              autoCorrect={false}
+            />
+
+            <Text style={styles.label}>Potvrdi novu lozinku</Text>
+            <TextInput
+              style={styles.input}
+              value={adminSetPasswordData.new_password_confirm}
+              onChangeText={(text) => setAdminSetPasswordData({ ...adminSetPasswordData, new_password_confirm: text })}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="new-password"
+              autoCorrect={false}
+              returnKeyType="done"
+              onSubmitEditing={handleSetPassword}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, settingPassword && styles.modalButtonDisabled]}
+                onPress={handleSetPassword}
+                disabled={settingPassword}
+              >
+                <Text style={styles.modalButtonText}>{settingPassword ? 'Postavljanje...' : 'Postavi'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => {
+                  setShowSetPasswordModal(false);
+                  setAdminSetPasswordData({ new_password: '', new_password_confirm: '' });
+                }}
+              >
+                <Text style={styles.modalCancelButtonText}>Odustani</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Modal za trenutnog korisnika (svoj profil/lozinka) */}
       <Modal visible={showCurrentUserModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
@@ -928,10 +1038,103 @@ export default function UsersScreen() {
         </View>
       </Modal>
 
-      {/* Dropdown modali za filtere */}
+      {/* Modal za filtere i sortiranje */}
+      <Modal visible={showFiltersModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.filtersModalContent}>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* FILTERI */}
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>FILTERI</Text>
+
+                <Text style={styles.label}>Uloga</Text>
+                <View style={styles.pickerContainer}>
+                  <TouchableOpacity
+                    style={styles.picker}
+                    onPress={() => setShowRoleDropdown(true)}
+                  >
+                    <Text style={styles.pickerText}>
+                      {tempRoleFilter === 'all' ? 'Svi korisnici' : tempRoleFilter === 'admin' ? 'Administratori' : 'Čuvari'}
+                    </Text>
+                    <Text style={styles.pickerArrow}>▼</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.label}>Status</Text>
+                <View style={styles.pickerContainer}>
+                  <TouchableOpacity
+                    style={styles.picker}
+                    onPress={() => setShowStatusDropdown(true)}
+                  >
+                    <Text style={styles.pickerText}>
+                      {tempIsActiveFilter === 'all' ? 'Svi' : tempIsActiveFilter === 'active' ? 'Aktivni' : 'Neaktivni'}
+                    </Text>
+                    <Text style={styles.pickerArrow}>▼</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* SORTIRANJE */}
+              <View style={styles.filterSection}>
+                <Text style={styles.sectionTitle}>SORTIRANJE</Text>
+
+                <Text style={styles.label}>Sortiraj po</Text>
+                <View style={styles.pickerContainer}>
+                  <TouchableOpacity
+                    style={styles.picker}
+                    onPress={() => setShowSortDropdown(true)}
+                  >
+                    <Text style={styles.pickerText}>
+                      {tempSortField === 'username' ? 'Korisničko ime' :
+                       tempSortField === 'last_name' ? 'Prezime' :
+                       tempSortField === 'last_login' ? 'Zadnja web prijava' :
+                       tempSortField === 'last_mobile_login' ? 'Zadnja mobilna prijava' :
+                       tempSortField === 'date_joined' ? 'Datum registracije' :
+                       tempSortField === 'guard__priority_number' ? 'Prioritet' : tempSortField}
+                    </Text>
+                    <Text style={styles.pickerArrow}>▼</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.label}>Redoslijed</Text>
+                <View style={styles.pickerContainer}>
+                  <TouchableOpacity
+                    style={styles.picker}
+                    onPress={() => setShowOrderDropdown(true)}
+                  >
+                    <Text style={styles.pickerText}>
+                      {tempSortOrder === 'asc' ? '↑ Uzlazno (A-Z, 1-9)' : '↓ Silazno (Z-A, 9-1)'}
+                    </Text>
+                    <Text style={styles.pickerArrow}>▼</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* BUTTONS - FIKSIRAN NA DNU */}
+            <View style={styles.filtersModalFooter}>
+              <TouchableOpacity
+                style={styles.filterCancelButton}
+                onPress={cancelFilters}
+              >
+                <Text style={styles.filterCancelButtonText}>Odustani</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.filterApplyButton}
+                onPress={applyFilters}
+              >
+                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Dropdown modali za filtere - renderovani NAKON filter modala da budu iznad na webu */}
       <Modal visible={showRoleDropdown} transparent animationType="fade">
-        <TouchableOpacity 
-          style={styles.dropdownOverlay} 
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
           activeOpacity={1}
           onPress={() => setShowRoleDropdown(false)}
         >
@@ -978,8 +1181,8 @@ export default function UsersScreen() {
       </Modal>
 
       <Modal visible={showStatusDropdown} transparent animationType="fade">
-        <TouchableOpacity 
-          style={styles.dropdownOverlay} 
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
           activeOpacity={1}
           onPress={() => setShowStatusDropdown(false)}
         >
@@ -1026,8 +1229,8 @@ export default function UsersScreen() {
       </Modal>
 
       <Modal visible={showSortDropdown} transparent animationType="fade">
-        <TouchableOpacity 
-          style={styles.dropdownOverlay} 
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
           activeOpacity={1}
           onPress={() => setShowSortDropdown(false)}
         >
@@ -1073,8 +1276,8 @@ export default function UsersScreen() {
       </Modal>
 
       <Modal visible={showOrderDropdown} transparent animationType="fade">
-        <TouchableOpacity 
-          style={styles.dropdownOverlay} 
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
           activeOpacity={1}
           onPress={() => setShowOrderDropdown(false)}
         >
@@ -1106,99 +1309,6 @@ export default function UsersScreen() {
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
-      </Modal>
-
-      {/* Modal za filtere i sortiranje - REDESIGNED */}
-      <Modal visible={showFiltersModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.filtersModalContent}>
-            
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* FILTERI */}
-              <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>FILTERI</Text>
-                
-                <Text style={styles.label}>Uloga</Text>
-                <View style={styles.pickerContainer}>
-                  <TouchableOpacity 
-                    style={styles.picker}
-                    onPress={() => setShowRoleDropdown(true)}
-                  >
-                    <Text style={styles.pickerText}>
-                      {tempRoleFilter === 'all' ? 'Svi korisnici' : tempRoleFilter === 'admin' ? 'Administratori' : 'Čuvari'}
-                    </Text>
-                    <Text style={styles.pickerArrow}>▼</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.label}>Status</Text>
-                <View style={styles.pickerContainer}>
-                  <TouchableOpacity 
-                    style={styles.picker}
-                    onPress={() => setShowStatusDropdown(true)}
-                  >
-                    <Text style={styles.pickerText}>
-                      {tempIsActiveFilter === 'all' ? 'Svi' : tempIsActiveFilter === 'active' ? 'Aktivni' : 'Neaktivni'}
-                    </Text>
-                    <Text style={styles.pickerArrow}>▼</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* SORTIRANJE */}
-              <View style={styles.filterSection}>
-                <Text style={styles.sectionTitle}>SORTIRANJE</Text>
-                
-                <Text style={styles.label}>Sortiraj po</Text>
-                <View style={styles.pickerContainer}>
-                  <TouchableOpacity 
-                    style={styles.picker}
-                    onPress={() => setShowSortDropdown(true)}
-                  >
-                    <Text style={styles.pickerText}>
-                      {tempSortField === 'username' ? 'Korisničko ime' :
-                       tempSortField === 'last_name' ? 'Prezime' :
-                       tempSortField === 'last_login' ? 'Zadnja web prijava' :
-                       tempSortField === 'last_mobile_login' ? 'Zadnja mobilna prijava' :
-                       tempSortField === 'date_joined' ? 'Datum registracije' :
-                       tempSortField === 'guard__priority_number' ? 'Prioritet' : tempSortField}
-                    </Text>
-                    <Text style={styles.pickerArrow}>▼</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.label}>Redoslijed</Text>
-                <View style={styles.pickerContainer}>
-                  <TouchableOpacity 
-                    style={styles.picker}
-                    onPress={() => setShowOrderDropdown(true)}
-                  >
-                    <Text style={styles.pickerText}>
-                      {tempSortOrder === 'asc' ? '↑ Uzlazno (A-Z, 1-9)' : '↓ Silazno (Z-A, 9-1)'}
-                    </Text>
-                    <Text style={styles.pickerArrow}>▼</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </ScrollView>
-            
-            {/* BUTTONS - FIKSIRAN NA DNU */}
-            <View style={styles.filtersModalFooter}>
-              <TouchableOpacity
-                style={styles.filterCancelButton}
-                onPress={cancelFilters}
-              >
-                <Text style={styles.filterCancelButtonText}>Odustani</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.filterApplyButton}
-                onPress={applyFilters}
-              >
-                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
       </Modal>
     </View>
   );

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "museum-mob-frontend",
-    "slug": "museum-mob-frontend",
+    "name": "Muzejski čuvari",
+    "slug": "muzejski-cuvari",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

@@ -79,6 +79,7 @@ const ExhibitionsScreen: React.FC = () => {
   const [showEventEndTimePicker, setShowEventEndTimePicker] = useState(false);
   
   // Form states
+  const [positionsInput, setPositionsInput] = useState('1');
   const [formData, setFormData] = useState<ExhibitionCreateData>({
     name: '',
     number_of_positions: 1,
@@ -160,7 +161,7 @@ const ExhibitionsScreen: React.FC = () => {
         const search = appliedSearchText.toLowerCase();
         exhibitionsList = exhibitionsList.filter((ex: Exhibition) =>
           ex.name.toLowerCase().includes(search) ||
-          ex.rules.toLowerCase().includes(search)
+          (ex.rules ?? '').toLowerCase().includes(search)
         );
       }
       
@@ -225,6 +226,7 @@ const ExhibitionsScreen: React.FC = () => {
   };
 
   const openCreateModal = () => {
+    setPositionsInput('1');
     setFormData({
       name: '',
       number_of_positions: 1,
@@ -244,6 +246,7 @@ const ExhibitionsScreen: React.FC = () => {
     const hasStarted = now > new Date(exhibition.start_date);
     const hasEnded = now > new Date(exhibition.end_date);
     
+    setPositionsInput(exhibition.number_of_positions.toString());
     setFormData({
       name: exhibition.name,
       number_of_positions: exhibition.number_of_positions,
@@ -261,6 +264,11 @@ const ExhibitionsScreen: React.FC = () => {
   const handleCreate = async () => {
     if (!formData.name.trim()) {
       crossAlert('Greška', 'Ime izložbe je obavezno');
+      return;
+    }
+
+    if (formData.number_of_positions < 1) {
+      crossAlert('Greška', 'Broj pozicija mora biti najmanje 1');
       return;
     }
 
@@ -309,6 +317,11 @@ const ExhibitionsScreen: React.FC = () => {
     console.log('🔵 originalEndDate:', originalEndDate);
     console.log('🔵 newEndDate:', newEndDate);
     
+    if (formData.number_of_positions < 1) {
+      crossAlert('Greška', 'Broj pozicija mora biti najmanje 1');
+      return;
+    }
+
     // Validacija: Ne smije se mijenjati datum početka ako je izložba već počela
     const hasExhibitionStarted = now > originalStartDate;
     const isStartDateChanged = newStartDate.getTime() !== originalStartDate.getTime();
@@ -402,7 +415,7 @@ const ExhibitionsScreen: React.FC = () => {
       const search = appliedSearchText.toLowerCase();
       filtered = filtered.filter(ex =>
         ex.name.toLowerCase().includes(search) ||
-        ex.rules.toLowerCase().includes(search)
+        (ex.rules ?? '').toLowerCase().includes(search)
       );
     }
 
@@ -569,13 +582,22 @@ const ExhibitionsScreen: React.FC = () => {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Broj pozicija po danu *</Text>
+              <Text style={styles.label}>Broj pozicija po smjeni *</Text>
               <TextInput
                 style={styles.input}
-                value={formData.number_of_positions.toString()}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, number_of_positions: parseInt(text) || 1 })
-                }
+                value={positionsInput}
+                onChangeText={(text) => {
+                  setPositionsInput(text);
+                  const num = parseInt(text);
+                  if (num >= 1) setFormData({ ...formData, number_of_positions: num });
+                }}
+                onBlur={() => {
+                  const num = parseInt(positionsInput);
+                  if (!num || num < 1) {
+                    setPositionsInput('1');
+                    setFormData({ ...formData, number_of_positions: 1 });
+                  }
+                }}
                 keyboardType="numeric"
                 placeholder="1"
               />
@@ -1057,10 +1079,90 @@ const ExhibitionsScreen: React.FC = () => {
         </TouchableOpacity>
       </Modal>
 
-      {/* Dropdown modali za status */}
+      {/* Filter/Sort Modal */}
+      <Modal visible={showFiltersModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.filtersModalContent}>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* FILTERI */}
+              <View style={styles.filterSection}>
+                <Text style={styles.modalTitle}>Filter</Text>
+
+                <Text style={styles.label}>Status</Text>
+                <View style={styles.pickerContainer}>
+                  <TouchableOpacity
+                    style={styles.picker}
+                    onPress={() => setShowStatusDropdown(true)}
+                  >
+                    <Text style={styles.pickerText}>
+                      {tempStatusFilter === 'all' ? 'Sve izložbe' :
+                       tempStatusFilter === 'active' ? 'Aktivne' :
+                       tempStatusFilter === 'upcoming' ? 'Nadolazeće' :
+                       'Završene'}
+                    </Text>
+                    <Text style={styles.pickerArrow}>▼</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* SORTIRANJE */}
+              <View style={styles.filterSection}>
+                <Text style={styles.modalTitle}>Sortiranje</Text>
+
+                <Text style={styles.label}>Sortiraj po</Text>
+                <View style={styles.pickerContainer}>
+                  <TouchableOpacity
+                    style={styles.picker}
+                    onPress={() => setShowSortDropdown(true)}
+                  >
+                    <Text style={styles.pickerText}>
+                      {tempSortField === 'name' ? 'Ime' :
+                       tempSortField === 'start_date' ? 'Datum početka' :
+                       'Datum kraja'}
+                    </Text>
+                    <Text style={styles.pickerArrow}>▼</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.label}>Redoslijed</Text>
+                <View style={styles.pickerContainer}>
+                  <TouchableOpacity
+                    style={styles.picker}
+                    onPress={() => setShowOrderDropdown(true)}
+                  >
+                    <Text style={styles.pickerText}>
+                      {tempSortOrder === 'asc' ? '↑ Uzlazno (A-Z, 1-9)' : '↓ Silazno (Z-A, 9-1)'}
+                    </Text>
+                    <Text style={styles.pickerArrow}>▼</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* BUTTONS - FIKSIRAN NA DNU */}
+            <View style={styles.filtersModalFooter}>
+              <TouchableOpacity
+                style={styles.filterCancelButton}
+                onPress={cancelFilters}
+              >
+                <Text style={styles.filterCancelButtonText}>Odustani</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.filterApplyButton}
+                onPress={applyFilters}
+              >
+                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Dropdown modali za filtere - renderovani NAKON filter modala da budu iznad na webu */}
       <Modal visible={showStatusDropdown} transparent animationType="fade">
-        <TouchableOpacity 
-          style={styles.dropdownOverlay} 
+        <TouchableOpacity
+          style={styles.dropdownOverlay}
           activeOpacity={1}
           onPress={() => setShowStatusDropdown(false)}
         >
@@ -1157,86 +1259,6 @@ const ExhibitionsScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
-      </Modal>
-
-      {/* Filter/Sort Modal - centriran kao u UsersScreen */}
-      <Modal visible={showFiltersModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.filtersModalContent}>
-            
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* FILTERI */}
-              <View style={styles.filterSection}>
-                <Text style={styles.modalTitle}>Filter</Text>
-                
-                <Text style={styles.label}>Status</Text>
-                <View style={styles.pickerContainer}>
-                  <TouchableOpacity 
-                    style={styles.picker}
-                    onPress={() => setShowStatusDropdown(true)}
-                  >
-                    <Text style={styles.pickerText}>
-                      {tempStatusFilter === 'all' ? 'Sve izložbe' :
-                       tempStatusFilter === 'active' ? 'Aktivne' :
-                       tempStatusFilter === 'upcoming' ? 'Nadolazeće' :
-                       'Završene'}
-                    </Text>
-                    <Text style={styles.pickerArrow}>▼</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* SORTIRANJE */}
-              <View style={styles.filterSection}>
-                <Text style={styles.modalTitle}>Sortiranje</Text>
-                
-                <Text style={styles.label}>Sortiraj po</Text>
-                <View style={styles.pickerContainer}>
-                  <TouchableOpacity 
-                    style={styles.picker}
-                    onPress={() => setShowSortDropdown(true)}
-                  >
-                    <Text style={styles.pickerText}>
-                      {tempSortField === 'name' ? 'Ime' :
-                       tempSortField === 'start_date' ? 'Datum početka' :
-                       'Datum kraja'}
-                    </Text>
-                    <Text style={styles.pickerArrow}>▼</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.label}>Redoslijed</Text>
-                <View style={styles.pickerContainer}>
-                  <TouchableOpacity 
-                    style={styles.picker}
-                    onPress={() => setShowOrderDropdown(true)}
-                  >
-                    <Text style={styles.pickerText}>
-                      {tempSortOrder === 'asc' ? '↑ Uzlazno (A-Z, 1-9)' : '↓ Silazno (Z-A, 9-1)'}
-                    </Text>
-                    <Text style={styles.pickerArrow}>▼</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </ScrollView>
-            
-            {/* BUTTONS - FIKSIRAN NA DNU */}
-            <View style={styles.filtersModalFooter}>
-              <TouchableOpacity
-                style={styles.filterCancelButton}
-                onPress={cancelFilters}
-              >
-                <Text style={styles.filterCancelButtonText}>Odustani</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.filterApplyButton}
-                onPress={applyFilters}
-              >
-                <Text style={styles.filterApplyButtonText}>Primijeni</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
       </Modal>
 
       {renderDetailsModal()}

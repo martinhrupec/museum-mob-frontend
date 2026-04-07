@@ -40,6 +40,7 @@ export default function ReceptionReportsScreen() {
   
   // Search & Filter state
   const [searchText, setSearchText] = useState('');
+  const [appliedSearchText, setAppliedSearchText] = useState('');
   const [exhibitionFilter, setExhibitionFilter] = useState<number | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [showFiltersModal, setShowFiltersModal] = useState(false);
@@ -88,7 +89,7 @@ export default function ReceptionReportsScreen() {
     } else {
       fetchData(1);
     }
-  }, [exhibitionFilter, sortOrder]);
+  }, [exhibitionFilter, sortOrder, appliedSearchText]);
 
   const fetchData = async (pageNum: number = page) => {
     try {
@@ -137,16 +138,16 @@ export default function ReceptionReportsScreen() {
 
   // Frontend search filter only (backend doesn't support partial text search)
   const filteredBySearch = useMemo(() => {
-    if (!searchText.trim()) {
+    if (!appliedSearchText.trim()) {
       return reports;
     }
-    
-    const search = searchText.toLowerCase();
-    return reports.filter(r => 
-      r.report_text.toLowerCase().includes(search) ||
-      r.guard.full_name.toLowerCase().includes(search)
+
+    const search = appliedSearchText.toLowerCase();
+    return reports.filter(r =>
+      (r.report_text ?? '').toLowerCase().includes(search) ||
+      (r.guard?.full_name ?? '').toLowerCase().includes(search)
     );
-  }, [reports, searchText]);
+  }, [reports, appliedSearchText]);
 
   // Dohvati pozicije za ovaj tjedan kad se otvori modal
   const openCreateModal = async () => {
@@ -290,7 +291,6 @@ export default function ReceptionReportsScreen() {
       <View style={styles.header}>
         {/* Search bar */}
         <View style={styles.searchContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
             placeholder="Pretraži prijave..."
@@ -300,14 +300,25 @@ export default function ReceptionReportsScreen() {
             autoComplete="off"
             autoCorrect={false}
             returnKeyType="search"
-            blurOnSubmit={true}
-            onSubmitEditing={() => Keyboard.dismiss()}
+            onSubmitEditing={() => {
+              setAppliedSearchText(searchText);
+              Keyboard.dismiss();
+            }}
           />
           {searchText.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchText('')} style={styles.clearButton}>
+            <TouchableOpacity onPress={() => { setSearchText(''); setAppliedSearchText(''); }} style={styles.clearButton}>
               <Text style={styles.clearIcon}>✕</Text>
             </TouchableOpacity>
           )}
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={() => {
+              setAppliedSearchText(searchText);
+              Keyboard.dismiss();
+            }}
+          >
+            <Text style={styles.searchButtonText}>🔍</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.filterIconButton}
             onPress={openFiltersModal}
@@ -557,6 +568,7 @@ export default function ReceptionReportsScreen() {
                   value={reportText}
                   onChangeText={setReportText}
                   placeholder="Opišite problem..."
+                  placeholderTextColor="#7A9A6A"
                   multiline
                   numberOfLines={4}
                   autoComplete="off"
@@ -630,15 +642,25 @@ const styles = StyleSheet.create({
     borderColor: '#A6C27A',
     borderRadius: 8,
     padding: 10,
-    paddingLeft: 35,
     paddingRight: 35,
     fontSize: 15,
     backgroundColor: '#F7F4D5',
     color: '#0A3323',
   },
+  searchButton: {
+    backgroundColor: '#0A3323',
+    borderRadius: 8,
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  searchButtonText: {
+    fontSize: 16,
+  },
   clearButton: {
     position: 'absolute',
-    right: 55,
+    right: 115,
     padding: 4,
   },
   clearIcon: {

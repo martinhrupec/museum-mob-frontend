@@ -18,6 +18,13 @@ import { SystemSettings, NonWorkingDay } from '../types';
 
 const DAYS_OF_WEEK = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
 
+const formatDateLocal = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function SystemSettingsScreen() {
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'admin';
@@ -102,7 +109,7 @@ export default function SystemSettingsScreen() {
 
     try {
       setCreatingNwd(true);
-      const dateStr = nwdDate.toISOString().split('T')[0];
+      const dateStr = formatDateLocal(nwdDate);
       
       const data: any = {
         date: dateStr,
@@ -664,25 +671,30 @@ export default function SystemSettingsScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <Text style={styles.modalLabel}>Datum *</Text>
               {Platform.OS === 'web' ? (
-                <input
-                  type="date"
-                  value={nwdDate.toISOString().split('T')[0]}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => {
-                    const d = new Date(e.target.value + 'T00:00:00');
-                    if (!isNaN(d.getTime())) setNwdDate(d);
-                  }}
-                  style={{
-                    padding: 14,
-                    borderRadius: 8,
-                    backgroundColor: '#105666',
-                    color: '#F7F4D5',
-                    border: '1px solid #0A3323',
-                    fontSize: 16,
-                    width: '100%',
-                    boxSizing: 'border-box' as const,
-                  }}
-                />
+                <View style={{ position: 'relative' }}>
+                  <TouchableOpacity style={styles.datePickerButton} onPress={() => {}}>
+                    <Text style={styles.datePickerButtonText}>
+                      {nwdDate.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </Text>
+                    <Text style={styles.datePickerArrow}>📅</Text>
+                  </TouchableOpacity>
+                  <input
+                    type="date"
+                    value={formatDateLocal(nwdDate)}
+                    min={formatDateLocal(new Date())}
+                    onChange={(e) => {
+                      const d = new Date(e.target.value + 'T00:00:00');
+                      if (!isNaN(d.getTime())) setNwdDate(d);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: 0, left: 0, bottom: 0, right: 0,
+                      opacity: 0,
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  />
+                </View>
               ) : (
                 <>
                   <TouchableOpacity
